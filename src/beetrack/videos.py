@@ -159,6 +159,13 @@ def _draw_segments(img, g: pd.DataFrame, to_px, color, max_gap_frames: int, thic
         cv2.polylines(img, [np.round(np.array(run)).astype(np.int32)], False, color, thickness, cv2.LINE_AA)
 
 
+H264_ENCODERS = [
+    ["-c:v", "libx264", "-preset", "veryfast", "-crf", "22"],
+    ["-c:v", "h264_mf", "-b:v", "6M"],             # Windows Media Foundation
+    ["-c:v", "h264_videotoolbox", "-b:v", "6M"],   # macOS
+]
+
+
 class _Writer:
     """mp4v via OpenCV into a temp file, re-encoded to H.264 with ffmpeg when available."""
 
@@ -180,11 +187,14 @@ class _Writer:
         self.out.parent.mkdir(parents=True, exist_ok=True)
         ffmpeg = shutil.which("ffmpeg")
         if ffmpeg:
-            cmd = [ffmpeg, "-y", "-v", "error", "-i", str(self.raw), "-c:v", "libx264", "-preset", "veryfast", "-crf", "22",
-                   "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(self.out)]
-            if subprocess.run(cmd).returncode == 0:
-                shutil.rmtree(self.tmp, ignore_errors=True)
-                return self.out
+            # H.264 plays everywhere. libx264 is in most ffmpeg builds; the LGPL build shipped with the
+            # Windows app has the system encoders instead (Media Foundation on Windows, VideoToolbox on macOS).
+            for enc in H264_ENCODERS:
+                cmd = [ffmpeg, "-y", "-v", "error", "-i", str(self.raw), *enc,
+                       "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(self.out)]
+                if subprocess.run(cmd, capture_output=True).returncode == 0:
+                    shutil.rmtree(self.tmp, ignore_errors=True)
+                    return self.out
         shutil.move(str(self.raw), self.out)
         shutil.rmtree(self.tmp, ignore_errors=True)
         return self.out

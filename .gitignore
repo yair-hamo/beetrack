@@ -18,3 +18,8 @@ synthetic_demo/
 *.mkv
 *.mov
 *.avi
+
+# app builds (packaging/)
+build/
+dist/
+packaging/beetrack.ico

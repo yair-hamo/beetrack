@@ -1,0 +1,25 @@
+# Runs the test suite on every pull request and on main. Free for public repositories.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          playwright install --with-deps chromium
+      - name: Tests (pipeline, API and the web app in a browser)
+        run: pytest
