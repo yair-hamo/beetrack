@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>beetrack</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><polygon points='32,4 56,18 56,46 32,60 8,46 8,18' fill='%23e8a317'/><circle cx='32' cy='32' r='9' fill='%231f2328'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/vendor/plotly.min.js" defer></script>  <!-- vendored plotly.js 2.35.2 (MIT): works offline -->
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#/">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="var(--honey)"/><circle cx="32" cy="32" r="9" fill="var(--ink)"/></svg>
+        <span>beetrack</span>
+      </a>
+      <nav>
+        <a href="#/" data-nav="list"><span class="ico">▦</span>Experiments</a>
+        <a href="#/new" data-nav="new"><span class="ico">＋</span>New experiment</a>
+        <a href="#/jobs" data-nav="jobs"><span class="ico">⟳</span>Analysis queue</a>
+        <a href="#/help" data-nav="help"><span class="ico">?</span>How it works</a>
+      </nav>
+      <div class="sidebar-foot">
+        <button class="ghost small" id="themeToggle" title="Toggle light/dark">◐ Theme</button>
+        <div class="muted tiny" id="version"></div>
+      </div>
+    </aside>
+    <main id="view" class="view"><div class="loading">Loading…</div></main>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card" id="modalCard"></div></div>
+</body>
+</html>

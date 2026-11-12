@@ -1,0 +1,125 @@
+# beetrack analysis configuration (defaults)
+analysis_fps: 15.0
+max_frames: null
+detection:
+  method: morphological
+  diff_threshold: 28
+  bee_length_mm: 12.0
+  bee_width_mm: 4.5
+  min_area_fraction: 0.35
+  max_bees_per_blob: 4
+  arena_margin_mm: 2.0
+  median_samples: 60
+  bee_size: auto
+  size_samples: 40
+  static_suppression: 0.0
+  auto_threshold: true
+  ignore_queen_cell: false
+color:
+  palette:
+  - name: white
+    hue: null
+    white: true
+    display: '#f5f5f5'
+    labs: null
+    tol: 10.0
+  - name: yellow
+    hue: 26.0
+    white: false
+    display: '#f2d531'
+    labs: null
+    tol: 10.0
+  - name: lime
+    hue: 38.0
+    white: false
+    display: '#a6d62a'
+    labs: null
+    tol: 10.0
+  - name: green
+    hue: 67.0
+    white: false
+    display: '#2fb24c'
+    labs: null
+    tol: 10.0
+  - name: cyan
+    hue: 95.0
+    white: false
+    display: '#22c3e6'
+    labs: null
+    tol: 10.0
+  - name: blue
+    hue: 109.0
+    white: false
+    display: '#2f6fe0'
+    labs: null
+    tol: 10.0
+  - name: purple
+    hue: 136.0
+    white: false
+    display: '#9b4de0'
+    labs: null
+    tol: 10.0
+  - name: pink
+    hue: 162.0
+    white: false
+    display: '#f055b4'
+    labs: null
+    tol: 10.0
+  - name: red
+    hue: 1.0
+    white: false
+    display: '#e0352b'
+    labs: null
+    tol: 10.0
+  - name: orange
+    hue: 13.0
+    white: false
+    display: '#f07a1e'
+    labs: null
+    tol: 10.0
+  min_saturation: 110
+  min_value: 160
+  white_max_saturation: 60
+  white_min_value: 200
+  max_hue_distance: 6.0
+  min_spot_area_mm2: 0.8
+  dominance: 1.5
+  dot_position: auto
+tracking:
+  max_speed_mm_s: 40.0
+  gate_max_dt_s: 0.4
+  gate_slack_mm: 4.0
+  max_gap_s: 1.0
+identity:
+  min_votes: 3.0
+  min_purity: 0.6
+  switch_window: 9
+  switch_min_votes: 6
+  link_max_gap_s: 3.0
+  link_max_dist_mm: 6.0
+  closed_group: true
+  min_probability: 0.0
+  keep_unidentified: true
+trajectories:
+  max_interp_gap_s: 2.0
+  max_interp_speed_mm_s: 40.0
+  max_still_gap_s: 30.0
+  still_gap_max_move_mm: 3.0
+  smooth_window_s: 0.4
+  moving_speed_mm_s: 2.0
+  head_offset_fraction: 0.42
+visits:
+  zones:
+  - name: contact
+    margin_mm: 3.0
+  - name: vicinity
+    margin_mm: 10.0
+  point: head
+  min_visit_s: 1.0
+  merge_gap_s: 1.5
+  bin_s: 300.0
+unmarked:
+  stitch_max_gap_s: 2.0
+  stitch_max_dist_mm: 8.0
+  stitch_ambiguity_ratio: 1.5
+  min_track_s: 2.0

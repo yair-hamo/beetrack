@@ -1,0 +1,20 @@
+# environments and caches
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.DS_Store
+
+# the user's experiments and generated outputs: never commit
+data/
+demo/
+results/
+synthetic_demo/
+*.sqlite
+*.sqlite-*
+
+# videos (README GIFs in docs/assets are kept)
+*.mp4
+*.mkv
+*.mov
+*.avi
