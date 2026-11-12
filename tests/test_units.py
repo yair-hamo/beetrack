@@ -268,3 +268,53 @@ def test_queen_cell_ellipse_generates_outline():
     assert q2.polygon_px == q.polygon_px
     with pytest.raises(ValueError):
         QueenCell.model_validate({"polygon_px": [[0, 0], [1, 1]]})
+
+
+# ------------------------------------------------------------ desktop app ---- #
+
+
+def test_desktop_data_dir_defaults_to_documents_and_can_be_overridden(monkeypatch, tmp_path):
+    from beetrack import desktop
+
+    monkeypatch.setenv("BEETRACK_DATA", str(tmp_path / "x"))
+    assert desktop.data_dir() == tmp_path / "x"
+    monkeypatch.delenv("BEETRACK_DATA")
+    monkeypatch.setattr(desktop.Path, "home", lambda: tmp_path)
+    assert desktop.data_dir() == tmp_path / "beetrack"           # no Documents folder → home
+    (tmp_path / "Documents").mkdir()
+    assert desktop.data_dir() == tmp_path / "Documents" / "beetrack"
+
+
+def test_desktop_port_selection_skips_busy_ports():
+    import socket
+
+    from beetrack import desktop
+
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        busy = s.getsockname()[1]
+        s.listen()
+        assert not desktop.port_free(busy)
+        assert desktop.choose_port(busy) != busy
+    assert desktop.running_beetrack(busy, timeout=0.2) is False   # nothing answers there now
+
+
+def test_desktop_explicit_busy_port_is_an_error(monkeypatch):
+    import socket
+
+    from beetrack import desktop
+
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        s.listen()
+        monkeypatch.setenv("BEETRACK_PORT", str(s.getsockname()[1]))
+        monkeypatch.setenv("BEETRACK_NO_BROWSER", "1")
+        with pytest.raises(SystemExit, match="in use"):
+            desktop.main()
+
+
+def test_video_writer_tries_several_h264_encoders():
+    from beetrack.videos import H264_ENCODERS
+
+    names = [e[e.index("-c:v") + 1] for e in H264_ENCODERS]
+    assert names[0] == "libx264" and "h264_mf" in names   # LGPL ffmpeg on Windows has h264_mf, not libx264

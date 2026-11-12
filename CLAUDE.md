@@ -84,6 +84,32 @@ Read it to debug what the user saw; **never delete or rewrite it** without askin
   outside this folder. Commits use the GitHub no-reply address configured in this repo's local git config.
 - README GIFs live in `docs/assets/`; keep each under ~4 MB (ffmpeg palettegen, ≤ 480 px wide, 10 fps).
 
+## Releases
+
+Windows app, built and published by GitHub Actions (`.github/workflows/windows-app.yml`), free for this public repo:
+
+- **Contents**: `beetrack-setup-X.Y.Z.exe` (Inno Setup, per-user, no admin; Start-menu/desktop shortcuts;
+  upgrades in place) and `beetrack-portable-X.Y.Z-windows.zip` (unzip and run). ~100–150 MB compressed,
+  ~350 MB installed. Python, all libraries and an **LGPL ffmpeg** are bundled; users install nothing.
+- **How it starts**: `packaging/launcher.py` → `beetrack.desktop.main()`: `multiprocessing.freeze_support()`
+  first (analyses run in spawned child processes), server on 127.0.0.1:8000 (or the next free port), browser
+  opens, data in `Documents\beetrack` (`BEETRACK_DATA`), console window = close to stop; a second launch just
+  opens the browser. `BEETRACK_PORT` forces a port, `BEETRACK_NO_BROWSER=1` for checks.
+- **Recipe**: `packaging/beetrack.spec` (PyInstaller, one folder) + `packaging/beetrack.iss` (installer).
+  The workflow downloads the LGPL ffmpeg from BtbN/FFmpeg-Builds; LGPL ffmpeg has no libx264, so `videos.py`
+  tries `libx264` → `h264_mf` (Windows) → `h264_videotoolbox` (macOS).
+- **Checks**: `packaging/smoke_test.py` runs the *packaged* app end to end (start, upload, analyse in the
+  frozen worker, render a video) on the portable build and again after a silent install.
+- **To release**: bump the version in the three places (§7), merge, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
+  The tag must equal the pyproject version or the workflow stops. Pull requests that touch packaging run the
+  same build and checks without publishing (files kept 7 days as a workflow artifact).
+- **Keep all releases** (the user's choice): results record the version that made them.
+- Unsigned: Windows SmartScreen shows "Windows protected your PC" → More info → Run anyway. Code signing
+  (paid) would remove it. On macOS a first launch of a fresh build can take minutes (Gatekeeper scan).
+- Local build on the Mac (for debugging the recipe): `pip install pyinstaller requests && pyinstaller
+  packaging/beetrack.spec --noconfirm --distpath build/dist --workpath build/pyi && python
+  packaging/smoke_test.py build/dist/beetrack/beetrack 8772`.
+
 ## 4. Code map (`src/beetrack/`)
 
 | Module | Role |
@@ -107,6 +133,7 @@ Read it to debug what the user saw; **never delete or rewrite it** without askin
 | `synthetic.py` | Synthetic arena with ground truth; `colours=NEON`, `mark_at="abdomen"` for testing. |
 | `evaluation.py` | Accuracy vs ground truth or hand annotations. |
 | `recording.py` | ffmpeg recorder (macOS AVFoundation / Linux v4l2). |
+| `desktop.py` | Desktop launcher used by the Windows app (see Releases). |
 | `server/` | FastAPI (`api.py`), SQLite (`db.py`, migrates columns on startup), job worker (`worker.py`: one job at a time in a spawned process; analyses and video renders), overlay drawing, static single-page UI (`static/app.js`, ~1400 lines, no build step, Plotly vendored in `static/vendor`). |
 
 Pipeline in one line: `video ─► detect ─► read marks ─► link (tracklets) ─► identity (closed group) ─►

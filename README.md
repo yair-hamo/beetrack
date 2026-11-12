@@ -22,6 +22,12 @@ and measure their visits to the queen cell, from an ordinary video. No GPU, no t
 
 </div>
 
+## Download for Windows
+
+**[⬇ Download the latest version](https://github.com/yair-hamo/beetrack/releases/latest)**: run `beetrack-setup-….exe`, then open **beetrack** from the Start menu.
+Nothing else to install. Windows may warn *"Windows protected your PC"* the first time: click **More info → Run anyway**.
+Your experiments are kept in `Documents\beetrack`.
+
 ## What you get
 
 - **Every bee, every frame**: position in millimetres, heading, speed, and how sure the identity is.
@@ -30,7 +36,7 @@ and measure their visits to the queen cell, from an ordinary video. No GPU, no t
 - **Result videos**: the annotated recording, a paths map and a heatmap, plus CSV / MOT exports.
 - **A web app** to upload videos, mark the queen cell, learn the paint colours, run the analysis and explore results.
 
-## Quick start
+## Quick start (from source, any OS)
 
 ```bash
 git clone https://github.com/yair-hamo/beetrack.git && cd beetrack
@@ -82,7 +88,9 @@ pip install -e ".[dev]" && playwright install chromium
 pytest                    # 173 tests, including the web app in a real browser
 ```
 
-Changes go through a branch and a pull request.
+Changes go through a branch and a pull request; tests run automatically on GitHub.
+To publish a new Windows version, bump the version and push a tag such as `v0.4.0`: GitHub builds,
+checks and publishes the installer (see [CLAUDE.md](CLAUDE.md#releases)).
 
 ## License
 

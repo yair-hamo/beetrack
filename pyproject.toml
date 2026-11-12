@@ -30,6 +30,7 @@ dev = ["pytest>=7", "httpx>=0.25", "h5py>=3.8", "playwright>=1.45", "pytest-play
 
 [project.scripts]
 beetrack = "beetrack.cli:app"
+beetrack-desktop = "beetrack.desktop:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
