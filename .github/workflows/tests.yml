@@ -1,10 +1,18 @@
-# Runs the test suite on every pull request and on main. Free for public repositories.
+# Runs the test suite once per pull request (not again after merging). Free for public repositories,
+# and it never blocks a merge: it only reports a ✓ or ✗ on the pull request.
 name: Tests
 
 on:
   pull_request:
-  push:
-    branches: [main]
+    paths-ignore:            # documentation-only changes don't need the tests
+      - "**.md"
+      - "docs/**"
+      - "packaging/RELEASE_NOTES.md"
+      - "LICENSE"
+
+concurrency:                 # a new push to the same pull request cancels the older run
+  group: tests-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   tests:
@@ -15,6 +23,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
       - name: Install
         run: |
           sudo apt-get update -q && sudo apt-get install -y -q ffmpeg

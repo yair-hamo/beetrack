@@ -15,6 +15,10 @@ on:
       - "pyproject.toml"
   workflow_dispatch:
 
+concurrency:                 # a new push to the same pull request cancels the older build
+  group: windows-app-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: write
 

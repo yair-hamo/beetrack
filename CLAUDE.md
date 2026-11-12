@@ -78,6 +78,10 @@ Read it to debug what the user saw; **never delete or rewrite it** without askin
 - Branch names: `fix/<short-topic>`, `feat/<short-topic>`, `docs/<short-topic>`.
 - Before opening a PR: `pytest` passes (or say exactly which tests fail and why), docs/CLAUDE.md updated if
   behaviour changed, version bumped if the web UI or outputs changed (§7).
+- CI (free for this public repo, never blocks merging): `tests.yml` runs `pytest` **once per PR** (not on
+  `main` after merging; docs-only PRs skip it; a new push cancels the older run). `windows-app.yml` builds
+  the Windows app only when packaging changes or a `v*` tag is pushed. The user worried about cost and
+  duplicate runs: don't add triggers without asking.
 - Open PRs with `gh pr create` (gh is logged in as `yair-hamo`). PR description: what changed, why, how it
   was tested; end with the attribution line the session gives. Don't merge unless the user asks.
 - The repo is public: never commit `data/`, videos (`*.mp4`, `*.mkv`), the user's email, or anything from
