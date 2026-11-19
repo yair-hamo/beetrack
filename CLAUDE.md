@@ -191,7 +191,7 @@ person**: there is no hand-annotated ground truth for real footage yet (see `doc
 
 - **Version bump in three places together**: `src/beetrack/__init__.py`, `pyproject.toml`, and `UI_VERSION`
   in `src/beetrack/server/static/app.js` (a unit test enforces the match; the UI shows a red banner on a
-  mismatch). Current: **0.3.0**.
+  mismatch). Current: **0.3.1**.
 - `app.js` is plain JS; after editing, syntax-check it (node is not installed on the dev Mac):
   `osascript -l JavaScript -e 'ObjC.import("Foundation"); var s=$.NSString.stringWithContentsOfFileEncodingError("src/beetrack/server/static/app.js",$.NSUTF8StringEncoding,null).js; new Function(s); "ok"'`
   then run `pytest tests/test_ui.py`.
@@ -205,6 +205,11 @@ person**: there is no hand-annotated ground truth for real footage yet (see `doc
   the dish scale, because the dish diameter is often unknown or wrong.
 - Mark discovery and identification share `collect_spots`; keep them consistent. Discovery excludes the queen
   cell + ignore areas; identification excludes only ignore areas (bees *on* the cell must stay readable).
+- **The server only sees the *saved* setup.** Discovery, analysis, frames and results read it from the DB, never
+  the drawing on screen. The Setup tab therefore saves unsaved changes before "Find the marks" and when the tab is
+  left (`App.leaving` in `route()`), and warns on page close. Keep it that way for any new action that reads the
+  setup. (v0.3.1 bug: on a fresh Windows install, food and the queen cell were drawn but not saved, so discovery
+  learned them as marks and the analysis counted them; it looked platform-specific but wasn't.)
 - If the closing disc ever detects the queen cell itself as a bee, `detection.ignore_queen_cell: true` exists,
   but `queen_cell.learn_background` (default) normally handles it.
 
@@ -229,6 +234,9 @@ occasionally hits a render timeout when the machine is busy; re-run before assum
   bug the user reported last, **"Find the marks" learned the food and the queen cell as marks** (fixed via
   `exclude` masks; tests added).
 - First push to GitHub (this README, CLAUDE.md, GIFs, hardware plan in `docs/HARDWARE.md`).
+- v0.3.0 released as a Windows installer (GitHub Actions). v0.3.1: unsaved Setup drawings are saved before
+  discovery / on leaving the tab; result plots draw the ignore areas and warn when a run had no queen cell or
+  ignore areas; discovery reports exactly what it left out (`excluded`).
 
 **Docs not yet updated for v0.3** (small, do it in a `docs/` PR): `docs/PIPELINE.md` §4c (probabilities,
 `id_source`, `silence_s`, `never_read`) and the mark-position section; `docs/DATA_FORMATS.md` (new columns

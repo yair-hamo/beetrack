@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "beetrack"
-version = "0.3.0"
+version = "0.3.1"
 description = "Track colour-marked honeybee workers in a petri-dish arena and quantify their visits to a queen cell."
 readme = "README.md"
 requires-python = ">=3.10"

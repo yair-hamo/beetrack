@@ -586,6 +586,37 @@ def test_setup_find_marks_in_the_video(ctx, video):
     _api(ctx, f"/experiments/{eid}", "DELETE")
 
 
+def test_unsaved_areas_are_saved_before_finding_marks_and_when_leaving(ctx, video):
+    """Regression (seen on a fresh Windows install): an ignore area drawn but not saved was invisible to
+    '✦ Find the marks' and to the analysis, so food and the queen cell were learned and counted as bees."""
+    page = ctx["page"]
+    eid = _api(ctx, "/experiments", "POST", {"name": "Unsaved areas"})["id"]
+    r = page.request.post(f"{ctx['base']}/api/experiments/{eid}/videos",
+                          multipart={"file": {"name": "seg.mp4", "mimeType": "video/mp4", "buffer": video["path"].read_bytes()}})
+    assert r.ok, r.text()
+    page.goto(f"/#/exp/{eid}/setup")
+    page.reload()
+    expect(page.locator(".stage img")).to_be_visible()
+    a = video["arena"]
+    x, y = a.cx - a.r_px * 0.8, a.cy + a.r_px * 0.35
+    page.get_by_role("button", name="▨ Ignore area: ellipse").click()
+    _canvas_drag(page, (x - 20, y), (x + 20, y))
+    expect(page.locator(".dirty-badge")).to_be_visible()
+    assert _api(ctx, f"/experiments/{eid}")["setup"]["ignore_areas"] == []  # not saved yet
+    page.get_by_role("button", name="✦ Find the marks in the video").click()
+    expect(page.locator(".mark-card").first).to_be_visible(timeout=60_000)
+    assert len(_api(ctx, f"/experiments/{eid}")["setup"]["ignore_areas"]) == 1  # saved first
+    expect(page.locator(".discover-box")).to_contain_text("1 ignore area(s)")
+    # a second unsaved area is saved when switching tabs
+    page.get_by_role("button", name="▨ Ignore area: ellipse").click()
+    _canvas_drag(page, (x - 20, y - 60), (x + 20, y - 60))
+    expect(page.locator(".dirty-badge")).to_be_visible()
+    page.goto(f"/#/exp/{eid}/analysis")
+    _toast(page, "Setup saved")
+    assert len(_api(ctx, f"/experiments/{eid}")["setup"]["ignore_areas"]) == 2
+    _api(ctx, f"/experiments/{eid}", "DELETE")
+
+
 def test_setup_colour_probe(ctx, video):
     page = _open_setup(ctx)
     page.get_by_role("button", name="⊙ Colour probe").click()
