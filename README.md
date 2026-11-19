@@ -26,6 +26,7 @@ and measure their visits to the queen cell, from an ordinary video. No GPU, no t
 
 **[⬇ Download the latest version](https://github.com/yair-hamo/beetrack/releases/latest)**: run `beetrack-setup-….exe`, then open **beetrack** from the Start menu.
 Nothing else to install. Windows may warn *"Windows protected your PC"* the first time: click **More info → Run anyway**.
+beetrack opens in its own window, like any other program (no browser or console needed).
 Your experiments are kept in `Documents\beetrack`.
 
 ## What you get
@@ -46,6 +47,8 @@ pip install -e .
 beetrack synth demo/ --duration 60    # make a test video (with exact ground truth)
 beetrack serve                        # open http://localhost:8000
 ```
+
+Or `pip install -e ".[desktop]"` and run `beetrack-desktop` to get the same app in its own window.
 
 Requires Python 3.10+. [ffmpeg](https://ffmpeg.org) is recommended (`brew install ffmpeg`) so result videos play everywhere.
 

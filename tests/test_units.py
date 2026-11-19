@@ -318,3 +318,113 @@ def test_video_writer_tries_several_h264_encoders():
 
     names = [e[e.index("-c:v") + 1] for e in H264_ENCODERS]
     assert names[0] == "libx264" and "h264_mf" in names   # LGPL ffmpeg on Windows has h264_mf, not libx264
+
+
+class _FakeWindow:
+    def __init__(self, answer):
+        self.answer, self.asked, self.destroyed, self.shown = answer, [], False, False
+
+    def create_confirmation_dialog(self, title, message):
+        self.asked.append(message)
+        return self.answer
+
+    def destroy(self):
+        self.destroyed = True
+
+    def restore(self):
+        pass
+
+    def show(self):
+        self.shown = True
+
+
+def _desktop_state(tmp_path, jobs=()):
+    from beetrack import desktop
+    from beetrack.server.db import Database, Experiment, Job
+
+    db = Database(tmp_path / "db.sqlite")
+    with db.session() as s:
+        e = Experiment(name="x")
+        s.add(e)
+        s.flush()
+        for status in jobs:
+            s.add(Job(experiment_id=e.id, status=status))
+        s.commit()
+    return desktop.DesktopState(db)
+
+
+def _join_dialog():
+    import threading
+
+    for t in threading.enumerate():
+        if t is not threading.current_thread() and t.name != "MainThread" and t.daemon:
+            t.join(2)
+
+
+def test_app_window_closes_at_once_when_nothing_is_pending(tmp_path):
+    st = _desktop_state(tmp_path, jobs=["done", "failed"])
+    st.window = _FakeWindow(answer=False)
+    assert st.on_closing() is True and st.window.asked == []
+
+
+def test_app_window_asks_before_stopping_an_analysis_or_dropping_an_unsaved_setup(tmp_path):
+    from beetrack.desktop import PageApi
+
+    st = _desktop_state(tmp_path, jobs=["running"])
+    PageApi(st).set_unsaved(True)
+    st.window = _FakeWindow(answer=False)
+    assert st.on_closing() is False           # stays open; the question comes in a dialog
+    _join_dialog()
+    msg = st.window.asked[0]
+    assert "still running" in msg and "not saved" in msg and not st.window.destroyed
+    assert not st.asking                      # answered "no": the next click asks again
+    st.window = _FakeWindow(answer=True)
+    assert st.on_closing() is False
+    _join_dialog()
+    assert st.window.destroyed and st.quitting and st.on_closing() is True
+
+
+def test_second_start_finds_the_running_copy_and_brings_its_window_forward(tmp_path, monkeypatch):
+    import os
+
+    from fastapi.testclient import TestClient
+
+    from beetrack import desktop
+    from beetrack.server.app import create_app
+
+    app = create_app(tmp_path / "data", start_worker=False)
+    st = desktop.DesktopState(app.state.db)
+    desktop.add_desktop_routes(app, st)
+    c = TestClient(app)
+    assert c.get("/api/desktop").json()["window"] is False
+    assert c.post("/api/desktop/show").json() == {"shown": False}   # no window (server only)
+    st.window = _FakeWindow(answer=True)
+    st.loaded.set()
+    assert c.get("/api/desktop").json() == {"window": True, "pid": os.getpid()}
+    assert c.post("/api/desktop/show").json() == {"shown": True} and st.window.shown
+
+    data = tmp_path / "data"
+    assert desktop.read_instance(data) is None
+    desktop.write_instance(data, 1234)
+    monkeypatch.setattr(desktop, "running_beetrack", lambda port, timeout=1.0: port == 1234)
+    assert desktop.read_instance(data) == 1234
+    monkeypatch.setattr(desktop, "running_beetrack", lambda port, timeout=1.0: False)
+    assert desktop.read_instance(data) is None   # left behind by a crash: ignored
+    desktop.remove_instance(data)
+    assert not (data / desktop.INSTANCE_FILE).exists()
+
+
+def test_packaged_app_writes_its_messages_to_a_log_file(tmp_path, monkeypatch):
+    import sys
+
+    from beetrack import desktop
+
+    monkeypatch.setattr(sys, "stdout", sys.stdout)
+    monkeypatch.setattr(sys, "stderr", sys.stderr)
+    old = tmp_path / "logs" / "beetrack.log"
+    old.parent.mkdir()
+    old.write_text("x" * (desktop.LOG_MAX_BYTES + 1))
+    path = desktop.log_to_file(tmp_path)
+    print("hello")
+    sys.stdout.close()
+    assert path.read_text() == "hello\n" and (tmp_path / "logs" / "beetrack.previous.log").exists()

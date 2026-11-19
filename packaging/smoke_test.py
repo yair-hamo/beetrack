@@ -5,7 +5,12 @@ uploads a short synthetic video, saves a setup, runs an analysis (which runs in
 a child process: the riskiest part of a frozen app), reads the results, and
 renders a paths video. Exits non-zero with a message on any failure.
 
-    python packaging/smoke_test.py dist/beetrack/beetrack.exe
+    python packaging/smoke_test.py dist/beetrack/beetrack.exe [port]
+    python packaging/smoke_test.py dist/beetrack/beetrack.exe [port] --window
+
+``--window`` checks the app window instead: it opens and loads the page, a second
+start brings it to the front and exits instead of starting a second copy, and
+the app writes its log file.
 
 Needs the beetrack package installed in the *calling* Python (to make the
 synthetic video) and ``requests``.
@@ -35,6 +40,40 @@ def wait(cond, timeout: float, what: str, every: float = 1.0):
             last = e
         time.sleep(every)
     raise SystemExit(f"timed out waiting for {what} (last: {last})")
+
+
+def app_log(work: Path) -> str:
+    """The packaged app has no console: its messages are in <data>/logs/beetrack.log."""
+    logs = sorted((work / "data" / "logs").glob("*.log"))
+    return "\n".join(f"---- {p.name} ----\n" + p.read_text(errors="replace")[-6000:] for p in logs) or "(no log file)"
+
+
+def check_window(exe: str, port: int) -> None:
+    work = Path(tempfile.mkdtemp(prefix="beetrack_window_"))
+    env = {**os.environ, "BEETRACK_PORT": str(port), "BEETRACK_DATA": str(work / "data")}
+    env.pop("BEETRACK_NO_BROWSER", None)
+    proc = subprocess.Popen([exe], env=env)
+    base = f"http://127.0.0.1:{port}/api"
+    try:
+        wait(lambda: requests.get(f"{base}/health", timeout=2).json(), 300, "the app to start")
+        first = wait(lambda: (d := requests.get(f"{base}/desktop", timeout=2).json())["window"] and d, 120,
+                     "the app window to load the page")
+        print("window open:", first)
+        again = subprocess.run([exe], env=env, timeout=120)
+        assert again.returncode == 0, f"second start exited with {again.returncode}"
+        assert requests.get(f"{base}/desktop", timeout=2).json()["pid"] == first["pid"], "a second copy took over"
+        assert proc.poll() is None, "the first copy stopped"
+        assert (work / "data" / "logs" / "beetrack.log").exists(), "no log file"
+        print("WINDOW CHECK PASSED")
+    except BaseException:
+        print(app_log(work))
+        raise
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(15)
+        except subprocess.TimeoutExpired:
+            proc.kill()
 
 
 def main(exe: str, port: int = 8765) -> None:
@@ -80,6 +119,7 @@ def main(exe: str, port: int = 8765) -> None:
         log.flush()
         print("---- app log ----")
         print((work / "app.log").read_text(errors="replace")[-6000:])
+        print(app_log(work))
         raise
     finally:
         proc.terminate()
@@ -90,4 +130,6 @@ def main(exe: str, port: int = 8765) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], int(sys.argv[2]) if len(sys.argv) > 2 else 8765)
+    args = [a for a in sys.argv[1:] if a != "--window"]
+    port = int(args[1]) if len(args) > 1 else 8765
+    (check_window if "--window" in sys.argv else main)(args[0], port)

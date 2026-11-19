@@ -9,4 +9,4 @@ The package is importable without the web server; ``beetrack.server`` is only
 needed for the browser UI.
 """
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
