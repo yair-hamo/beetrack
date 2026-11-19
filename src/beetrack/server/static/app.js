@@ -104,7 +104,7 @@ const pill = (s) => h("span", { class: `pill ${statusClass(s)}` }, s);
 
 /* Every bee is drawn in the colour of its paint dot, everywhere (tables, charts, video overlay).
  * White would vanish on a light page, so it is drawn as light grey. */
-const UI_VERSION = "0.3.0";
+const UI_VERSION = "0.3.1";
 function dotColor(name) {
   const hex = (App.palette[name] || {}).display || "#999999";
   return name === "white" || /^#f[0-9a-f]f[0-9a-f]f[0-9a-f]$/i.test(hex) ? "#b9bcc2" : hex;
@@ -127,7 +127,7 @@ function subjects(runSetup, metrics) {
   return { bees: ids.map((id) => ({ bee_id: id })), unmarked: true };
 }
 
-const App = { defaults: null, palette: {}, timers: new Set() };
+const App = { defaults: null, palette: {}, timers: new Set(), leaving: null };
 function clearTimers() { for (const t of App.timers) clearInterval(t); App.timers.clear(); }
 
 /* palette for swatches/colours: the defaults, plus the marks learned for the current experiment */
@@ -174,6 +174,10 @@ function plot(el, data, layout) {
 /* ======================================================================== */
 async function route() {
   clearTimers();
+  if (App.leaving) {  // e.g. the Setup tab with unsaved drawings: save them before anything else reads the setup
+    const leave = App.leaving; App.leaving = null;
+    if (!(await leave())) return;
+  }
   const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
   document.querySelectorAll("nav a").forEach((a) => a.classList.remove("active"));
   const nav = (k) => { const a = document.querySelector(`nav a[data-nav="${k}"]`); if (a) a.classList.add("active"); };
@@ -424,7 +428,18 @@ async function tabSetup(body, e) {
   const slider = h("input", { type: "range", min: 0, max: Math.max(0, Math.floor(duration)), value: 0, step: 1 });
   const clock = h("span", { class: "mono muted" }, fmt.clock(0));
   const alerts = h("div", { class: "alerts" });
-  const markDirty = () => dirtyBadge.classList.remove("hidden");
+  // Unsaved drawings are invisible to the server: discovery and analysis read the *saved* setup.
+  // So save before discovering, when leaving the tab, and warn before closing the page.
+  let dirty = false;
+  const markDirty = () => { dirty = true; dirtyBadge.classList.remove("hidden"); };
+  App.leaving = async () => {
+    if (!dirty) return true;
+    try { await saveNow(); return true; } catch (err) {
+      if (await confirmModal("Setup not saved", `Your changes could not be saved: ${err.message}`, "Leave without saving", true)) { dirty = false; return true; }
+      App.leaving = null; location.hash = `#/exp/${e.id}/setup`; return false;
+    }
+  };
+  window.onbeforeunload = (ev) => { if (dirty && App.leaving) { ev.preventDefault(); ev.returnValue = ""; } };
 
   const loadFrame = () => { img.src = `/api/experiments/${e.id}/frame?t=${t}&overlay=false&max_width=${W}`; };
   slider.oninput = () => { t = Number(slider.value); clock.textContent = fmt.clock(t); };
@@ -815,6 +830,7 @@ async function tabSetup(body, e) {
     btn.disabled = true; btn.textContent = "Looking at the video…";
     discoverBox.replaceChildren(h("div", { class: "progress indeterminate" }, h("div", {})));
     try {
+      if (dirty) await saveNow();  // discovery must leave out the queen cell and ignore areas drawn on screen
       const res = await api(`/experiments/${e.id}/discover-marks`, { method: "POST", body: {} });
       renderDiscovery(res);
     } finally { btn.disabled = false; btn.textContent = "✦ Find the marks in the video"; }
@@ -860,7 +876,7 @@ async function tabSetup(body, e) {
     };
     discoverBox.replaceChildren(
       h("p", { class: "muted tiny" }, `Found ${res.clusters.length} groups of mark-like spots in ${res.n_frames} frames (${res.n_spots} sightings). `,
-        res.excluded_px ? "The queen cell, the ignore areas and a 1 mm band around them were left out. " : "Tip: outline the queen cell and draw ignore areas over food first, so their colours aren't mistaken for marks. ",
+        res.excluded_px ? `Left out (with a 1 mm band): ${[res.excluded && res.excluded.queen_cell ? "the queen cell" : null, res.excluded && res.excluded.ignore_areas ? `${res.excluded.ignore_areas} ignore area(s)` : null].filter(Boolean).join(" and ") || "the marked areas"}. ` : "Nothing was left out: outline the queen cell and draw ignore areas over food first (then Save setup), so their colours aren't mistaken for marks. ",
         "Tick the real marks and give each a bee. Give two groups the same bee to merge them (the same paint in different light)."),
       ...rows.map((r) => r.card),
       h("div", { class: "row", style: { marginTop: "10px" } }, h("button", { class: "primary use-marks", onclick: apply }, "Use these marks"),
@@ -906,13 +922,14 @@ async function tabSetup(body, e) {
       !check.errors.length ? h("div", { class: "alert ok" }, "✓ Setup is complete.") : null);
   };
   showCheck(e.check);
-  const save = guard(async () => {
+  async function saveNow() {
     if (setup.dish) setup.dish.diameter_mm = Number(diam.value);
     const r = await api(`/experiments/${e.id}/setup`, { method: "PUT", body: setup });
     setup.queen_cell = r.setup.queen_cell;  // server-normalised (outline regenerated from the ellipse)
     setup.ignore_areas = r.setup.ignore_areas || [];
-    showCheck(r.check); dirtyBadge.classList.add("hidden"); draw(); toast("Setup saved");
-  });
+    dirty = false; showCheck(r.check); dirtyBadge.classList.add("hidden"); draw(); toast("Setup saved");
+  }
+  const save = guard(saveNow);
 
   body.replaceChildren(h("div", { class: "split" },
     h("div", { class: "card" }, toolbar, stage, hint, cellInfo, areaList,
@@ -1274,6 +1291,11 @@ async function tabExplorer(body, e) {
     h("div", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "Where bees spend time"), heatSel), cHeat)));
 
   const [geo, tr] = await Promise.all([api(`/experiments/${e.id}/geometry`), api(`/experiments/${e.id}/results/trajectories?step_s=0.5`)]);
+  if (geo.dish_radius_mm && (!geo.queen_cell || !(geo.ignore_areas || []).length)) {
+    const missing = [!geo.queen_cell ? "a queen-cell outline" : null, !(geo.ignore_areas || []).length ? "ignore areas (food…)" : null].filter(Boolean).join(" or ");
+    body.append(h("div", { class: "alert warn run-missing-areas", style: { marginTop: "16px" } },
+      `This analysis ran without ${missing}, so detections there are counted. Draw them in `, h("a", { href: `#/exp/${e.id}/setup` }, "Setup"), ", save, and analyse again."));
+  }
   {
     // registered bees first (in their mark colours), then other identities (U…/T…); at most 30, longest first
     App.palette = Object.fromEntries([...App.defaults.palette, ...(geo.palette || [])].map((c) => [c.name, c]));
@@ -1290,6 +1312,7 @@ async function tabExplorer(body, e) {
     const R = geo.dish_radius_mm || 75, th = [...Array(121).keys()].map((i) => (i / 120) * 2 * Math.PI);
     const out = [{ type: "scatter", mode: "lines", x: th.map((a) => R * Math.cos(a)), y: th.map((a) => R * Math.sin(a)), line: { color: cssVar("--ink-3"), width: 1.5 }, hoverinfo: "skip", showlegend: false }];
     if (geo.queen_cell) out.push({ type: "scatter", mode: "lines", x: [...geo.queen_cell.x, geo.queen_cell.x[0]], y: [...geo.queen_cell.y, geo.queen_cell.y[0]], fill: "toself", fillcolor: "rgba(229,72,77,.15)", line: { color: "#e5484d", width: 2 }, name: "queen cell", hoverinfo: "name" });
+    (geo.ignore_areas || []).forEach((a) => out.push({ type: "scatter", mode: "lines", x: [...a.x, a.x[0]], y: [...a.y, a.y[0]], fill: "toself", fillcolor: "rgba(120,120,120,.22)", line: { color: "#6b7280", width: 1, dash: "dash" }, name: `${a.name} (ignored)`, hoverinfo: "name", showlegend: false }));
     (geo.zones || []).forEach((z) => out.push({ type: "scatter", mode: "lines", x: [...z.x, z.x[0]], y: [...z.y, z.y[0]], line: { color: "#e5484d", width: 1, dash: "dot" }, name: z.name, hoverinfo: "name", showlegend: false }));
     return out;
   };

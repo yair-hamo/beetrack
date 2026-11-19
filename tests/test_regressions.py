@@ -335,3 +335,20 @@ def test_discover_marks_endpoint_leaves_out_cell_and_ignore_areas(served):
     c, eid, _ = served
     body = c.post(f"/api/experiments/{eid}/discover-marks", json={"frames": 30}).json()
     assert body["excluded_px"] > 0  # the synthetic setup has a queen cell
+    assert body["excluded"]["queen_cell"] is True  # and it says what was left out, from the *saved* setup
+
+
+def test_geometry_reports_ignore_areas_for_result_plots(served, synthetic):
+    """The result plots draw the food/ignore areas (in mm), so a run made without them is visible."""
+    c, _, _ = served
+    eid = c.post("/api/experiments", json={"name": "geometry"}).json()["id"]
+    with open(synthetic["video"], "rb") as f:
+        assert c.post(f"/api/experiments/{eid}/videos", files={"file": ("v.mp4", f, "video/mp4")}).status_code == 201
+    setup = ExperimentSetup.load(synthetic["setup"]).model_dump(mode="json")
+    cx, cy = setup["dish"]["center_px"]
+    setup["ignore_areas"] = [{"name": "food", "polygon_px": [[cx, cy], [cx + 30, cy], [cx + 30, cy + 30]]}]
+    assert c.put(f"/api/experiments/{eid}/setup", json=setup).status_code == 200
+    geo = c.get(f"/api/experiments/{eid}/geometry").json()
+    assert [a["name"] for a in geo["ignore_areas"]] == ["food"]
+    assert geo["ignore_areas"][0]["x"][0] == 0 and geo["ignore_areas"][0]["x"][1] > 0  # mm, dish centre = origin
+    c.delete(f"/api/experiments/{eid}")

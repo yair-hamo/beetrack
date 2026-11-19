@@ -457,8 +457,10 @@ def discover_marks(exp_id: int, body: DiscoverIn | None = None, state=Depends(ct
     detector, proc = pl.calibrated_detector(rec, geom)
     # never learn from the ignore areas (food…) or the queen cell's wax, nor from a 1 mm band around them
     exclude = proc.exclusion_mask(include_cell=True, margin_mm=1.0)
-    return discover(rec, detector, n_frames=body.frames, px_per_mm=proc.px_per_mm,
-                    dish=(geom.cx, geom.cy, geom.radius_px), exclude=exclude)
+    res = discover(rec, detector, n_frames=body.frames, px_per_mm=proc.px_per_mm,
+                   dish=(geom.cx, geom.cy, geom.radius_px), exclude=exclude)
+    res["excluded"] = {"queen_cell": setup.queen_cell is not None, "ignore_areas": len(setup.ignore_areas)}
+    return res
 
 
 class ConfigIn(BaseModel):
@@ -603,11 +605,15 @@ def geometry_mm(exp_id: int, state=Depends(ctx)):
         if done is not None and state.store.results_dir(e.id, done.id).exists():
             setup, cfg = _run_setup(state.store.results_dir(e.id, done.id))  # match the plotted trajectories
         if setup.dish is None or not e.videos:
-            return {"dish_radius_mm": None, "queen_cell": None, "zones": []}
+            return {"dish_radius_mm": None, "queen_cell": None, "zones": [], "ignore_areas": []}
         geom = Geometry.from_setup(setup, e.videos[0].width, e.videos[0].height)
     out = {"dish_radius_mm": setup.dish.diameter_mm / 2, "queen_cell": None, "zones": [],
            "marking": setup.marking, "bees": [b.model_dump() for b in setup.bees],
            "palette": [c.model_dump() for c in cfg.color.palette]}
+    out["ignore_areas"] = []
+    for a, poly in zip(setup.ignore_areas, geom.ignore or []):
+        x, y = geom.to_mm(poly[:, 0], poly[:, 1])
+        out["ignore_areas"].append({"name": a.name, "x": x.round(2).tolist(), "y": y.round(2).tolist()})
     if geom.queen_cell is not None:
         x, y = geom.to_mm(geom.queen_cell[:, 0], geom.queen_cell[:, 1])
         out["queen_cell"] = {"x": x.round(2).tolist(), "y": y.round(2).tolist()}
