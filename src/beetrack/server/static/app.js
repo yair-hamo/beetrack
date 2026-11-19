@@ -104,7 +104,7 @@ const pill = (s) => h("span", { class: `pill ${statusClass(s)}` }, s);
 
 /* Every bee is drawn in the colour of its paint dot, everywhere (tables, charts, video overlay).
  * White would vanish on a light page, so it is drawn as light grey. */
-const UI_VERSION = "0.3.1";
+const UI_VERSION = "0.4.0";
 function dotColor(name) {
   const hex = (App.palette[name] || {}).display || "#999999";
   return name === "white" || /^#f[0-9a-f]f[0-9a-f]f[0-9a-f]$/i.test(hex) ? "#b9bcc2" : hex;
@@ -128,6 +128,9 @@ function subjects(runSetup, metrics) {
 }
 
 const App = { defaults: null, palette: {}, timers: new Set(), leaving: null };
+/* In the beetrack app window (not a browser): tell the window about unsaved work, so closing it asks first. */
+function tellWindowUnsaved(flag) { try { if (window.pywebview && window.pywebview.api) window.pywebview.api.set_unsaved(!!flag); } catch {} }
+window.addEventListener("pywebviewready", () => tellWindowUnsaved(false));
 function clearTimers() { for (const t of App.timers) clearInterval(t); App.timers.clear(); }
 
 /* palette for swatches/colours: the defaults, plus the marks learned for the current experiment */
@@ -431,11 +434,11 @@ async function tabSetup(body, e) {
   // Unsaved drawings are invisible to the server: discovery and analysis read the *saved* setup.
   // So save before discovering, when leaving the tab, and warn before closing the page.
   let dirty = false;
-  const markDirty = () => { dirty = true; dirtyBadge.classList.remove("hidden"); };
+  const markDirty = () => { if (!dirty) tellWindowUnsaved(true); dirty = true; dirtyBadge.classList.remove("hidden"); };
   App.leaving = async () => {
     if (!dirty) return true;
     try { await saveNow(); return true; } catch (err) {
-      if (await confirmModal("Setup not saved", `Your changes could not be saved: ${err.message}`, "Leave without saving", true)) { dirty = false; return true; }
+      if (await confirmModal("Setup not saved", `Your changes could not be saved: ${err.message}`, "Leave without saving", true)) { dirty = false; tellWindowUnsaved(false); return true; }
       App.leaving = null; location.hash = `#/exp/${e.id}/setup`; return false;
     }
   };
@@ -927,7 +930,7 @@ async function tabSetup(body, e) {
     const r = await api(`/experiments/${e.id}/setup`, { method: "PUT", body: setup });
     setup.queen_cell = r.setup.queen_cell;  // server-normalised (outline regenerated from the ellipse)
     setup.ignore_areas = r.setup.ignore_areas || [];
-    dirty = false; showCheck(r.check); dirtyBadge.classList.add("hidden"); draw(); toast("Setup saved");
+    dirty = false; tellWindowUnsaved(false); showCheck(r.check); dirtyBadge.classList.add("hidden"); draw(); toast("Setup saved");
   }
   const save = guard(saveNow);
 

@@ -1,15 +1,19 @@
-# PyInstaller recipe for the desktop app: one folder with beetrack.exe (console window = "close to stop").
+# PyInstaller recipe for the desktop app: one folder with beetrack.exe, a windowed app (no console:
+# beetrack opens in its own window, see src/beetrack/desktop.py; messages go to Documents\beetrack\logs).
 # Build:  pyinstaller packaging/beetrack.spec --noconfirm --distpath dist --workpath build/pyi
 # Optional inputs (the GitHub workflow provides them on Windows):
 #   build/ffmpeg/ffmpeg.exe (+ FFMPEG-LICENSE.txt)  → bundled, so result videos are H.264
 #   packaging/beetrack.ico                          → the exe icon
 import os
+import sys
 
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 ROOT = os.path.abspath(os.path.join(SPECPATH, ".."))
 
 hidden = collect_submodules("beetrack") + collect_submodules("uvicorn")
+# the app window (pywebview → Microsoft Edge WebView2 on Windows, via pythonnet)
+hidden += ["webview", "webview.platforms.edgechromium", "webview.platforms.winforms", "clr"] if sys.platform == "win32" else ["webview"]
 for mod in ("multipart", "python_multipart"):  # python-multipart changed its import name
     try:
         hidden += collect_submodules(mod)
@@ -17,6 +21,7 @@ for mod in ("multipart", "python_multipart"):  # python-multipart changed its im
         pass
 
 datas = collect_data_files("beetrack") + [(os.path.join(ROOT, "LICENSE"), ".")]
+datas += collect_data_files("webview")   # its page-side script and the WebView2 loader
 binaries = []
 ffmpeg_dir = os.path.join(ROOT, "build", "ffmpeg")
 for name in ("ffmpeg.exe", "ffmpeg"):
@@ -42,7 +47,7 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name="beetrack",
-    console=True,
+    console=False,
     icon=icon if os.path.exists(icon) else None,
 )
 coll = COLLECT(exe, a.binaries, a.datas, name="beetrack")

@@ -11,7 +11,8 @@ Nothing else to install: Python, the libraries and ffmpeg are included.
 
 1. Double-click **beetrack**. Windows may say *"Windows protected your PC"* because the app isn't signed yet:
    click **More info → Run anyway** (once).
-2. A small window opens (keep it open while you work; close it to stop beetrack) and your browser opens the app.
+2. beetrack opens in its own window. Close the window to quit; if an analysis is still running, it asks first.
+   Starting beetrack again while it's open just brings the window to the front.
 3. Your experiments are saved in **Documents\beetrack**. Updating or uninstalling beetrack never deletes them.
 
 Upgrading: just run the new installer.

@@ -96,9 +96,16 @@ Windows app, built and published by GitHub Actions (`.github/workflows/windows-a
   upgrades in place) and `beetrack-portable-X.Y.Z-windows.zip` (unzip and run). ~100–150 MB compressed,
   ~350 MB installed. Python, all libraries and an **LGPL ffmpeg** are bundled; users install nothing.
 - **How it starts**: `packaging/launcher.py` → `beetrack.desktop.main()`: `multiprocessing.freeze_support()`
-  first (analyses run in spawned child processes), server on 127.0.0.1:8000 (or the next free port), browser
-  opens, data in `Documents\beetrack` (`BEETRACK_DATA`), console window = close to stop; a second launch just
-  opens the browser. `BEETRACK_PORT` forces a port, `BEETRACK_NO_BROWSER=1` for checks.
+  first (analyses run in spawned child processes), server on 127.0.0.1:8000 (or the next free port) in a
+  thread, and the UI in **its own app window** (pywebview → Edge WebView2 on Windows; `console=False`, so
+  messages go to `Documents\beetrack\logs\beetrack.log`). Closing the window while a job runs or the setup is
+  unsaved asks first (the page reports unsaved work via `window.pywebview.api.set_unsaved`). The running copy
+  writes `<data>/.beetrack-instance.json`; a second launch POSTs `/api/desktop/show` to bring that window
+  forward and exits. No WebView2 / no pywebview → falls back to the browser plus an "OK to stop" message box.
+  Gotcha: the window's `closing` handler runs on the GUI thread — never open a dialog or `evaluate_js` from
+  it (deadlock); it returns False and asks from a thread. Data in `Documents\beetrack` (`BEETRACK_DATA`);
+  `BEETRACK_PORT` forces a port; `BEETRACK_NO_BROWSER=1` = server only (the smoke test; `--window` checks
+  the window on the CI runner).
 - **Recipe**: `packaging/beetrack.spec` (PyInstaller, one folder) + `packaging/beetrack.iss` (installer).
   The workflow downloads the LGPL ffmpeg from BtbN/FFmpeg-Builds; LGPL ffmpeg has no libx264, so `videos.py`
   tries `libx264` → `h264_mf` (Windows) → `h264_videotoolbox` (macOS).
@@ -191,7 +198,7 @@ person**: there is no hand-annotated ground truth for real footage yet (see `doc
 
 - **Version bump in three places together**: `src/beetrack/__init__.py`, `pyproject.toml`, and `UI_VERSION`
   in `src/beetrack/server/static/app.js` (a unit test enforces the match; the UI shows a red banner on a
-  mismatch). Current: **0.3.1**.
+  mismatch). Current: **0.4.0**.
 - `app.js` is plain JS; after editing, syntax-check it (node is not installed on the dev Mac):
   `osascript -l JavaScript -e 'ObjC.import("Foundation"); var s=$.NSString.stringWithContentsOfFileEncodingError("src/beetrack/server/static/app.js",$.NSUTF8StringEncoding,null).js; new Function(s); "ok"'`
   then run `pytest tests/test_ui.py`.
@@ -237,6 +244,10 @@ occasionally hits a render timeout when the machine is busy; re-run before assum
 - v0.3.0 released as a Windows installer (GitHub Actions). v0.3.1: unsaved Setup drawings are saved before
   discovery / on leaving the tab; result plots draw the ignore areas and warn when a run had no queen cell or
   ignore areas; discovery reports exactly what it left out (`excluded`).
+- v0.4.0: the Windows app opens in its own window (no console, no browser); researchers found the console +
+  browser pop-up unreliable. A full native-UI rewrite (Qt) was considered and rejected: same result for
+  users, months of work, loses the tested web UI. Head-direction work (PR #4) was dropped by the user for now
+  (not accurate enough on real footage); its branch `feat/head-direction` is kept on GitHub.
 
 **Docs not yet updated for v0.3** (small, do it in a `docs/` PR): `docs/PIPELINE.md` §4c (probabilities,
 `id_source`, `silence_s`, `never_read`) and the mark-position section; `docs/DATA_FORMATS.md` (new columns

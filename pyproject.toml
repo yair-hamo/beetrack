@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "beetrack"
-version = "0.3.1"
+version = "0.4.0"
 description = "Track colour-marked honeybee workers in a petri-dish arena and quantify their visits to a queen cell."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -26,6 +26,7 @@ dependencies = [
 
 [project.optional-dependencies]
 sleap = ["h5py>=3.8"]
+desktop = ["pywebview>=6.2"]   # the app window of beetrack-desktop / beetrack.exe (else: the browser)
 dev = ["pytest>=7", "httpx>=0.25", "h5py>=3.8", "playwright>=1.45", "pytest-playwright>=0.5"]
 
 [project.scripts]

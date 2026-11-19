@@ -46,7 +46,7 @@ jobs:
       - name: Install beetrack and build tools
         run: |
           python -m pip install --upgrade pip
-          pip install . pyinstaller pillow requests
+          pip install ".[desktop]" pyinstaller pillow requests
 
       - name: Icon
         run: python -c "from PIL import Image; Image.open('packaging/beetrack.png').save('packaging/beetrack.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])"
@@ -66,6 +66,9 @@ jobs:
 
       - name: Check the app works (start, analyse, render)
         run: python packaging/smoke_test.py dist/beetrack/beetrack.exe
+
+      - name: Check the app window (opens, a second start brings it to the front)
+        run: python packaging/smoke_test.py dist/beetrack/beetrack.exe 8767 --window
 
       - name: Portable zip
         shell: pwsh
