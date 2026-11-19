@@ -223,7 +223,14 @@ def _shape(mask: np.ndarray, x0: int, y0: int, frame_index: int) -> Detection | 
     common = np.sqrt(4 * mu11**2 + (mu20 - mu02) ** 2)
     l1 = max(0.0, (mu20 + mu02 + common) / 2)
     l2 = max(0.0, (mu20 + mu02 - common) / 2)
+    # Lopsidedness along the body axis (standardised 3rd moment): a bee's silhouette is not symmetric
+    # (bulky abdomen at one end, narrow head at the other). Which sign means "head" is learned per video
+    # from walking bees (trajectories.learn_shape_sign), so wings or lighting can't fool a fixed rule.
+    c, s = np.cos(angle), np.sin(angle)
+    m3 = (c**3 * m["mu30"] + 3 * c**2 * s * m["mu21"] + 3 * c * s**2 * m["mu12"] + s**3 * m["mu03"]) / m["m00"]
+    skew = float(m3 / l1**1.5) if l1 > 0 else float("nan")
     return Detection(
         frame=frame_index, x=x0 + cx, y=y0 + cy, axis_angle=float(angle),
         major_px=float(4 * np.sqrt(l1)), minor_px=float(4 * np.sqrt(l2)), area_px=float(m["m00"]),
+        axis_skew=skew,
     )

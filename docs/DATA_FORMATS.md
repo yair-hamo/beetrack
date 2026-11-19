@@ -23,12 +23,14 @@ Time: `time_s` = seconds from the start of the first video segment.
 | Column | Meaning |
 |---|---|
 | `bee_id` | e.g. `W03` (colour mode), or `T017` (unmarked mode: an anonymous track) |
-| `zone` | `contact` / `vicinity` (or your configured zones) |
+| `zone` | `contact` / `vicinity` / `inspection` (or your configured zones) |
 | `visit_no` | 1, 2, … per bee and zone |
 | `start_frame`, `end_frame` | source-video frame indices (global across segments) |
 | `start_s`, `end_s`, `duration_s` | seconds |
 | `observed_fraction` | share of the visit with a measured (not bridged) position |
 | `min_distance_mm` | closest approach of the head to the cell outline (0 = touching or inside) |
+| `id_probability` | mean identity probability over the visit (NaN where identity has none) |
+| `facing_fraction` | share of the visit's frames with a trustworthy heading in which the bee faced the cell (NaN = none trustworthy) |
 
 ## bee_metrics.csv
 
@@ -48,7 +50,8 @@ split across bins), `visits_started`.
 | `bee_id`, `frame`, `time_s` | key |
 | `x_mm`, `y_mm` | body centre (smoothed); NaN = unknown |
 | `head_x_mm`, `head_y_mm` | estimated head point |
-| `heading_deg` | body direction |
+| `heading_deg` | body direction (degrees, mm frame: 0 = +x, 90 = +y) |
+| `heading_source` | where the head/tail choice came from: `head` (SLEAP), `mark`, `motion` (walking direction), `shape` (silhouette, learned per video), `continuity` (carried on from a mark/motion frame), `guess` (uncertain start, nothing confirmed), `cluster` (part of a merged blob), empty = unknown. Only `head/mark/motion/shape` count for facing |
 | `speed_mm_s` | speed |
 | `observed` | detected in this frame (True) vs filled or unknown |
 | `interpolated` | position filled across a gap |
@@ -56,7 +59,7 @@ split across bins), `visits_started`.
 
 ## detections.parquet
 
-`frame`, `time_s`, `x_px`, `y_px`, `axis_angle` (rad, image frame), `major_px`, `minor_px`, `area_px`,
+`frame`, `time_s`, `x_px`, `y_px`, `axis_angle` (rad, image frame), `major_px`, `minor_px`, `area_px`, `axis_skew` (silhouette lopsidedness along `axis_angle`),
 `colors`, `s1_color/x/y`, `s2_color/x/y` (paint spots), `best_match`, `best_score`, `tracklet`,
 `bee_id`, `id_confidence`, `head_x_px`, `head_y_px`.
 

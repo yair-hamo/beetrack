@@ -167,7 +167,15 @@ visits.query("zone == 'contact'").groupby("bee_id").duration_s.agg(["count", "su
 6. **Reproducible**: k-means is seeded; two runs of the same video give identical results (tested).
 7. **Units**: configuration in mm and s; outputs in mm, origin dish centre, y up; angles CCW from +x.
 8. The **queen cell is a fixed region**, not a moving queen. Visits are measured with the bee's head point.
-9. Two kinds of experiment: **colour marks** (named bees W…, plus U… for unmarked members of the group)
+9. **Head direction is reported with its source** (`heading_source`) and only trustworthy sources
+   (`trajectories.RELIABLE_HEADING` = head/mark/motion/shape) may claim that a bee *faces* the cell. Merged
+   blobs → `cluster`, runs with an uncertain start → `guess`. Every per-video cue (mark position, silhouette)
+   is **learned from walking bees in that video** and switches itself off when unclear; never a fixed rule.
+10. **Pose estimation (SLEAP) is not bundled** (user agreed, 2026-11-19): torch/sleap-nn would multiply the
+   installer size, CPU inference over 48 h is days to weeks, and legs/antennae are 1–2 px at our resolution.
+   Head/thorax/abdomen are the useful points. The route is: import SLEAP predictions (exists:
+   `detection/sleap_import.py`, `docs/SLEAP.md`), or later a tiny ONNX head/tail model on crops near the cell.
+11. Two kinds of experiment: **colour marks** (named bees W…, plus U… for unmarked members of the group)
    and **unmarked** (U… with a bee count, otherwise open-ended T… tracks).
 
 ## 6. Accuracy so far (keep these numbers honest; re-measure after changes)
@@ -178,6 +186,16 @@ mark ≈ 97 % right; named by motion only ≈ 35–40 % right (that's what a low
 `id_min_probability = 0.5`: wrong ≈ 2 %, coverage ≈ 79 %. Contact time is under-counted ≈ 15–25 % when bees pile
 up on the cell; time in the 10 mm vicinity is within ≈ 5 %. Speed ≈ 130 frames/s on an Apple-silicon Mac
 (1 h at 15 fps ≈ 7 min).
+
+Head direction (v0.4, `python scripts/heading_benchmark.py <folder>`: both seeds, marked and unmarked, compare
+`heading_deg` with `ground_truth.parquet`; head/tail swapped = error > 90°). Where `heading_source` is
+trustworthy: easy video 0.4 % (marked) / 1.9 % (unmarked) overall, 1 % / 6 % at the cell; crowded video 4 % /
+12 % overall, 13 % / 29 % at the cell. Trustworthy share 85–97 % of observed frames. Unmarked bees at the cell
+were ≈ 59 % wrong before the silhouette cue and windowed walking direction, 14 % after (easy video).
+Inspection time found: 77–83 % of the true time (marked), 50–57 % (unmarked): a lower bound by design.
+Real clip (452×414, unmarked): silhouette agreement 54 %, so the cue is off; walking direction picked the right
+end in 29/33 hand-checked crops (≈ 88 %). Hand-made features (darkness, width, saturation) and a pixel
+logistic regression per video reached only ≈ 70–80 % true accuracy there, so they were not shipped.
 
 Neon paint, marks on the abdomen (synthetic): all 6 paints found, including neon orange (the bees' own hue,
 found only by vividness); accuracy > 0.85; mark position learned as "abdomen".
@@ -191,7 +209,7 @@ person**: there is no hand-annotated ground truth for real footage yet (see `doc
 
 - **Version bump in three places together**: `src/beetrack/__init__.py`, `pyproject.toml`, and `UI_VERSION`
   in `src/beetrack/server/static/app.js` (a unit test enforces the match; the UI shows a red banner on a
-  mismatch). Current: **0.3.1**.
+  mismatch). Current: **0.4.0**.
 - `app.js` is plain JS; after editing, syntax-check it (node is not installed on the dev Mac):
   `osascript -l JavaScript -e 'ObjC.import("Foundation"); var s=$.NSString.stringWithContentsOfFileEncodingError("src/beetrack/server/static/app.js",$.NSUTF8StringEncoding,null).js; new Function(s); "ok"'`
   then run `pytest tests/test_ui.py`.
@@ -213,7 +231,7 @@ person**: there is no hand-annotated ground truth for real footage yet (see `doc
 - If the closing disc ever detects the queen cell itself as a bee, `detection.ignore_queen_cell: true` exists,
   but `queen_cell.learn_background` (default) normally handles it.
 
-## 8. Tests (`tests/`, 173)
+## 8. Tests (`tests/`)
 
 `conftest.py` session fixtures: `synthetic` (easy, 45 s), `result` (its analysis), `crowded` / `crowded_result`
 (bees pile up on the cell: for probability tests). Files: `test_units.py` (small units), `test_pipeline.py`
@@ -237,6 +255,10 @@ occasionally hits a render timeout when the machine is busy; re-run before assum
 - v0.3.0 released as a Windows installer (GitHub Actions). v0.3.1: unsaved Setup drawings are saved before
   discovery / on leaving the tab; result plots draw the ignore areas and warn when a run had no queen cell or
   ignore areas; discovery reports exactly what it left out (`excluded`).
+- v0.4.0: head direction. `heading_source` per trajectory frame; walking direction over ±0.3 s (≥ 4 mm/s);
+  silhouette cue (`axis_skew`, learned per video, `trajectories.shape_heading`); `cluster`/`guess` labels;
+  new default zone **inspection** (head ≤ 1.5 mm and facing, `Zone.facing`); `facing_fraction` per visit;
+  summary key `heading` (`shape` rule, `sources` shares); `Geometry.signed_cell_distance_mm` (distance map).
 
 **Docs not yet updated for v0.3** (small, do it in a `docs/` PR): `docs/PIPELINE.md` §4c (probabilities,
 `id_source`, `silence_s`, `never_read`) and the mark-position section; `docs/DATA_FORMATS.md` (new columns
@@ -252,8 +274,16 @@ occasionally hits a render timeout when the machine is busy; re-run before assum
    bees see UV (it changes behaviour), so only short synchronised flashes after the doctor agrees; the robust
    48 h option is IR light + printed black/white tags (as in NAPS, below). When neon footage arrives, run
    discovery and check the groups.
-3. **SLEAP route** (`docs/SLEAP.md`): not trained yet; beetrack imports a SLEAP analysis .h5. Neon marks would
-   help a SLEAP identity model too.
+3. **SLEAP route** (`docs/SLEAP.md`): not trained yet; beetrack imports a SLEAP analysis .h5 (with a head
+   node it sets `heading_source = head`). Research summary (2026-11): SLEAP ≥ 1.5 trains/infers with the
+   PyTorch `sleap-nn` (licence: GPL-3 in its repo vs BSD-3 on PyPI, ask before bundling); `sleap-io` (BSD-3)
+   reads .slp/.h5; ~20 labelled frames → 50 % and < 200 → 90 % of peak accuracy (flies/mice); no public
+   honeybee model (a bumblebee petri-dish dataset exists at legacy.sleap.ai/datasets). Keep paint-mark
+   identity: SLEAP ID models are finicky and tracks don't survive across videos.
+   **Next for head direction on real footage**: a tiny head/tail classifier on oriented crops near the cell,
+   trained once on hand-labelled crops from the real rig (not self-supervised per clip; that reached only
+   ≈ 70–80 %), shipped as ONNX (onnxruntime ≈ 16 MB). Needs the higher-resolution rig footage first.
+   Neon marks would help a SLEAP identity model too.
 4. Contact time is under-counted in crowds, and ~17 % of real detections are dropped as extra blobs: better
    splitting of touching bees (or SLEAP) would help.
 5. Vertical dish: bees on the near face show their belly; marking both sides (planned) should raise the read

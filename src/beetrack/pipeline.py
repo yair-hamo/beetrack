@@ -199,8 +199,10 @@ class AnalysisPipeline:
         self.progress("trajectories", 0.0, "building trajectories")
         codes = {b.bee_id: b.color for b in self.setup.bees} if mode == "color" else None
         dot_positions: dict[str, str] = {}
+        heading_info: dict = {}
         traj = (build_trajectories(det, geom, self.cfg.trajectories, frames, rec.fps, codes,
-                                   dot_position=self.cfg.color.dot_position, report=dot_positions)
+                                   dot_position=self.cfg.color.dot_position, report=dot_positions,
+                                   heading_report=heading_info)
                 if not det.empty else pd.DataFrame(columns=TRAJ_COLUMNS))
         timings["trajectories_s"] = time.time() - ts
 
@@ -255,6 +257,7 @@ class AnalysisPipeline:
             "closed_group": self.group_report,
             "mark_readings": mark_readings,
             "mark_positions": dot_positions,
+            "heading": heading_info,
             "videos": [s.as_dict() for s in rec.segments],
             "source_fps": rec.fps,
             "analysed_fps": rec.fps / step,

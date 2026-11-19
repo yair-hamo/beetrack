@@ -29,6 +29,8 @@ class Detection:
     major_px: float
     minor_px: float
     area_px: float
+    # Silhouette asymmetry along +axis_angle (see detection.background._shape); NaN if unknown
+    axis_skew: float = float("nan")
     # Filled by the colour identifier
     colors: tuple[str, ...] = ()          # observed paint colours, largest spot first
     spots: tuple[tuple[str, float, float], ...] = ()  # (colour, x_px, y_px) of those spots
@@ -49,6 +51,7 @@ class Detection:
             "major_px": self.major_px,
             "minor_px": self.minor_px,
             "area_px": self.area_px,
+            "axis_skew": self.axis_skew,
             "colors": "+".join(self.colors),
             **_spot_cols(self.spots),
             "best_match": max(self.color_scores, key=self.color_scores.get) if self.color_scores else "",

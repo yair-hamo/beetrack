@@ -57,7 +57,8 @@ def test_full_workflow(client, synthetic):
     res = client.get(f"/api/experiments/{eid}/results").json()
     assert res["summary"]["analysed_fps"] == pytest.approx(7.5)
     assert len(res["metrics"]) == 10
-    assert {z["name"] for z in res["zones"]} == {"contact", "vicinity"}
+    assert {z["name"] for z in res["zones"]} == {"contact", "vicinity", "inspection"}
+    assert [z["facing"] for z in res["zones"]] == [False, False, True]
 
     tr = client.get(f"/api/experiments/{eid}/results/trajectories", params={"bee": ["W01", "W02"], "step_s": 1}).json()
     assert set(tr) <= {"W01", "W02"} and tr

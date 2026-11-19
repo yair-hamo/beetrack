@@ -104,7 +104,7 @@ const pill = (s) => h("span", { class: `pill ${statusClass(s)}` }, s);
 
 /* Every bee is drawn in the colour of its paint dot, everywhere (tables, charts, video overlay).
  * White would vanish on a light page, so it is drawn as light grey. */
-const UI_VERSION = "0.3.1";
+const UI_VERSION = "0.4.0";
 function dotColor(name) {
   const hex = (App.palette[name] || {}).display || "#999999";
   return name === "white" || /^#f[0-9a-f]f[0-9a-f]f[0-9a-f]$/i.test(hex) ? "#b9bcc2" : hex;
@@ -292,7 +292,7 @@ function viewHelp(view) {
     ["3 · Link", "Detections are linked frame-to-frame into short, clean tracklets."],
     ["4 · Identify", "Colour evidence is summed per tracklet; each bee gets at most one place at a time."],
     ["5 · Paths", "Per-bee trajectories in mm, gaps filled carefully, heading from the thorax dot + motion."],
-    ["6 · Visits", "Head within the contact / vicinity zone of the queen cell → visits with durations."]];
+    ["6 · Visits", "Head within the contact / vicinity zone of the queen cell → visits with durations. The inspection zone also needs the bee to face the cell (head clearly nearer than its body)."]];
   view.replaceChildren(h("div", { class: "prose" },
     h("h1", {}, "How it works"),
     h("p", {}, "beetrack measures which worker visits the queen cell, how often and for how long, and keeps the full path of every bee."),
@@ -1012,7 +1012,8 @@ async function tabResults(body, e) {
   const S = r.summary;
 
   const zoneBtns = h("div", { class: "row" }, zones.map((z) => h("button", { class: `small ${z === zone ? "active" : ""}`, "data-zone": z, onclick: () => { zone = z; renderZone(); } },
-    `${z} (${(r.zones.find((q) => q.name === z) || {}).margin_mm} mm)`)));
+    `${z} (${(r.zones.find((q) => q.name === z) || {}).margin_mm} mm${(r.zones.find((q) => q.name === z) || {}).facing ? ", facing" : ""})`)));
+  const zoneNote = h("div", { class: "muted tiny zone-note", style: { marginBottom: "12px" } });
   const kpis = h("div", { class: "grid kpis" });
   const cCount = h("div", { class: "chart" });
   const cBars = h("div", { class: "chart" }), cDur = h("div", { class: "chart" }), cGantt = h("div", { class: "chart tall" }), cBinned = h("div", { class: "chart" });
@@ -1022,6 +1023,10 @@ async function tabResults(body, e) {
 
   function renderZone() {
     zoneBtns.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.zone === zone));
+    const zf = r.zones.find((q) => q.name === zone) || {};
+    zoneNote.textContent = zf.facing
+      ? `Head within ${zf.margin_mm} mm of the cell and pointing at it (not just brushing past). Time in crowds, where the head direction can't be told, is not counted, so this is a lower bound.`
+      : "";
     const V = r.visits.filter((v) => v.zone === zone);
     const M = r.metrics;
     const ids = bees.map((b) => b.bee_id);
@@ -1080,6 +1085,7 @@ async function tabResults(body, e) {
     metricsBox.replaceChildren(sortableTable(cols, M));
     visitsBox.replaceChildren(sortableTable([["bee_id", "Bee"], ["visit_no", "#"], ["start_s", "Start", (v) => fmt.clock(v)], ["end_s", "End", (v) => fmt.clock(v)],
       ["duration_s", "Duration (s)", (v) => fmt.num(v)], ["observed_fraction", "Observed", (v) => fmt.pct(v)], ["min_distance_mm", "Closest (mm)", (v) => fmt.num(v)], ["id_probability", "ID certainty", (v) => fmt.pct(v)],
+      ["facing_fraction", "Facing", (v) => fmt.pct(v)],
       ["start_s", "", (v) => h("a", { href: `#/exp/${e.id}/explorer`, onclick: () => { App.explorerT = v; } }, "view ↗")]], V));
   }
 
@@ -1191,6 +1197,7 @@ async function tabResults(body, e) {
 
   body.replaceChildren(
     h("div", { class: "card-head" }, zoneBtns, h("span", { class: "muted tiny" }, `run #${r.job_id} · ${S.analysed_frames.toLocaleString()} frames at ${fmt.num(S.analysed_fps, 1)} fps · ${fmt.num(S.px_per_mm, 2)} px/mm`)),
+    zoneNote,
     r.setup_changed ? h("div", { class: "alert warn setup-changed", style: { marginBottom: "16px" } },
       "! The setup was edited after this analysis. These results still show the setup they were made with. ",
       h("a", { href: `#/exp/${e.id}/analysis` }, "Run the analysis again"), " to use the new setup.") : null,

@@ -108,12 +108,18 @@ trajectories:
   smooth_window_s: 0.4
   moving_speed_mm_s: 2.0
   head_offset_fraction: 0.42
+  shape_heading: true
 visits:
   zones:
   - name: contact
     margin_mm: 3.0
+    facing: false
   - name: vicinity
     margin_mm: 10.0
+    facing: false
+  - name: inspection
+    margin_mm: 1.5
+    facing: true
   point: head
   min_visit_s: 1.0
   merge_gap_s: 1.5

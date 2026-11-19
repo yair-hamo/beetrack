@@ -116,18 +116,34 @@ Per bee, on the grid of analysed frames:
   reappears within `still_gap_max_move_mm` of where it vanished (a resting bee hidden in a cluster).
   Everything else stays NaN;
 * rolling-median smoothing (`smooth_window_s`), velocity and speed;
-* **heading**: the body-centre → thorax-dot vector when the dot is seen (works when still; turn off
-  with `color.dot_on_thorax: false` if dots are placed elsewhere), otherwise the velocity direction when moving, otherwise continuity;
+* **heading** (head vs tail; the body axis alone can't tell), first cue that applies:
+  1. the **mark**: centre → mark vector, mark ahead (thorax) or behind (abdomen) as learned per bee
+     (`color.dot_position`); works while still;
+  2. **walking direction** over ±0.3 s, only when clearly walking (≥ 4 mm/s): frame-to-frame velocity in a
+     crowd is centroid jitter;
+  3. **continuity** from the previous frame;
+  4. the **silhouette** (`trajectories.shape_heading`): the detector records how lopsided each blob is along
+     its axis (`axis_skew`). Whether lopsided-forward means head or abdomen is *learned per video* from
+     walking single bees and used only if they agree ≥ 70 %, otherwise the cue is off (on the one real clip
+     we have it was 54 %, so off). Each still run is checked as a whole and flipped if the silhouette clearly
+     disagrees (65 %; 80 % if the run continues straight from a mark/motion frame).
+  `heading_source` records which cue decided; merged blobs are labelled `cluster`, uncertain runs `guess`.
+  Synthetic accuracy (head/tail swapped) where the source is trustworthy: 0.4–1.9 % (easy), 4–12 % (bees
+  piling on the cell); see CLAUDE.md §6;
 * **head point** = centroid + `head_offset_fraction` × the bee's median body length along the heading.
 
 ## 6. Visits (`behavior/visits.py`)
 
 For each bee and zone: `inside[t]` = the head point (or the centroid, per `visits.point`) lies within
 the zone. Unknown frames are not "outside". Bouts closer than `merge_gap_s` are merged. Visits
-shorter than `min_visit_s` are dropped. Each visit records `observed_fraction` (data quality) and
-`min_distance_mm`.
+shorter than `min_visit_s` are dropped. Each visit records `observed_fraction` (data quality),
+`min_distance_mm`, `id_probability` and `facing_fraction`.
 
-Default zones: **contact** = 3 mm (about antenna reach), **vicinity** = 10 mm. These are biological
+Default zones: **contact** = 3 mm (about antenna reach), **vicinity** = 10 mm, and **inspection** = head within
+1.5 mm *and facing the cell* (`Zone.facing`): the head at least half a head-offset nearer the cell than the
+body centre (≈ ±60°), with a trustworthy heading; other frames are unknown there. It separates a bee putting
+its head to the cell (cf. inspections vs feedings in Siefert et al. 2020, *Sci Rep* 10:8547) from one
+brushing past with its abdomen. It is a lower bound in crowds. These are biological
 definitions: agree on them with the PI before the study and keep them fixed.
 
 ## 7. Metrics (`behavior/metrics.py`)

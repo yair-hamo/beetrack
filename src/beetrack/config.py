@@ -208,6 +208,13 @@ class TrajectoryConfig(BaseModel):
     smooth_window_s: float = Field(0.4, ge=0, description="Centred rolling-median window for positions")
     moving_speed_mm_s: float = Field(2.0, ge=0, description="Above this a bee counts as moving (also used for heading)")
     head_offset_fraction: float = Field(0.42, ge=0, le=0.5, description="Head point = centroid + this * body length along heading")
+    shape_heading: bool = Field(
+        True,
+        description=(
+            "Use the body silhouette (bulky abdomen vs narrow head) to tell head from tail when a bee stands still "
+            "and its mark doesn't say. Which end is which is learned from walking bees in each video; unused if unclear"
+        ),
+    )
 
 
 class Zone(BaseModel):
@@ -215,11 +222,19 @@ class Zone(BaseModel):
 
     name: str
     margin_mm: float = Field(ge=0)
+    facing: bool = Field(
+        False,
+        description=(
+            "Count only frames in which the bee faces the cell: its head clearly nearer the cell than its body "
+            "centre, with a trustworthy heading (mark, walking direction, SLEAP or body shape; not inside a cluster)"
+        ),
+    )
 
 
 class VisitConfig(BaseModel):
     zones: list[Zone] = Field(
-        default_factory=lambda: [Zone(name="contact", margin_mm=3.0), Zone(name="vicinity", margin_mm=10.0)]
+        default_factory=lambda: [Zone(name="contact", margin_mm=3.0), Zone(name="vicinity", margin_mm=10.0),
+                                 Zone(name="inspection", margin_mm=1.5, facing=True)]
     )
     point: Literal["head", "centroid"] = Field("head", description="Which body point must enter the zone")
     min_visit_s: float = Field(1.0, ge=0, description="Drop visits shorter than this")

@@ -144,6 +144,24 @@ class Geometry:
                 out[i] = max(0.0, -d) / self.px_per_mm
         return out
 
+    def signed_cell_distance_mm(self, x_px: np.ndarray, y_px: np.ndarray) -> np.ndarray:
+        """Signed distance (mm) to the cell outline, negative inside; NaN for missing points.
+        Uses a distance map built once (pixel precision), so it is fast on long recordings."""
+        if self.queen_cell is None:
+            raise ValueError("no queen cell defined")
+        if getattr(self, "_sdist", None) is None:
+            m = self.queen_cell_mask()
+            outside = cv2.distanceTransform((m == 0).astype(np.uint8), cv2.DIST_L2, 5)
+            inside = cv2.distanceTransform((m > 0).astype(np.uint8), cv2.DIST_L2, 5)
+            self._sdist = (outside - inside) / self.px_per_mm
+        x, y = np.asarray(x_px, float), np.asarray(y_px, float)
+        ok = np.isfinite(x) & np.isfinite(y)
+        out = np.full(len(x), np.nan)
+        xi = np.clip(np.round(x[ok]).astype(int), 0, self.width - 1)
+        yi = np.clip(np.round(y[ok]).astype(int), 0, self.height - 1)
+        out[ok] = self._sdist[yi, xi]
+        return out
+
     def zone_polygon_px(self, zone: Zone, samples: int = 64) -> np.ndarray:
         """Approximate outline of the cell grown by ``zone.margin_mm`` (for drawing)."""
         mask = self.queen_cell_mask()

@@ -717,8 +717,15 @@ def test_results_zone_switch(ctx):
     vicinity.click()
     expect(vicinity).to_have_class(re.compile("active"))
     expect(page.locator(".kpi .hint", has_text="vicinity zone")).to_be_visible()
+    # the facing zone says what it means; the others don't need a note
+    inspection = page.locator("button[data-zone=inspection]")
+    expect(inspection).to_contain_text("facing")
+    inspection.click()
+    expect(page.locator(".zone-note")).to_contain_text("pointing at it")
+    expect(page.locator(".card", has_text="All visits").locator("th", has_text="Facing")).to_be_visible()
     contact.click()
     expect(page.locator(".kpi .hint", has_text="contact zone")).to_be_visible()
+    expect(page.locator(".zone-note")).to_have_text("")
 
 
 def test_results_tables(ctx):

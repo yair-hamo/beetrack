@@ -15,6 +15,15 @@ For each zone (the cell outline grown by ``margin_mm``; by default
 4. **Filter**: visits shorter than ``min_visit_s`` are dropped (a worker
    just walking past the cell).
 
+**Facing zones** (``Zone.facing``, by default **inspection** = head within
+1.5 mm *and* facing the cell) also require the bee to point at the cell: its
+head at least half a head-offset nearer the cell than its body centre (about
+±60° of straight at it). Frames whose heading isn't trustworthy (see
+``trajectories.RELIABLE_HEADING``: e.g. inside a cluster of bees) count as
+*unknown* there, so they can bridge a short gap but never make a visit.
+This separates a bee putting its head to the cell from one brushing past it
+with its abdomen.
+
 A visit's duration is ``end_s - start_s + one frame interval``. Each visit
 also records how much of it was actually observed rather than bridged
 (``observed_fraction``) and how sure the bee's identity is during it
@@ -31,7 +40,7 @@ from ..config import VisitConfig, Zone
 
 VISIT_COLUMNS = [
     "bee_id", "zone", "visit_no", "start_frame", "end_frame", "start_s", "end_s",
-    "duration_s", "observed_fraction", "min_distance_mm", "id_probability",
+    "duration_s", "observed_fraction", "min_distance_mm", "id_probability", "facing_fraction",
 ]
 
 
@@ -51,6 +60,22 @@ class VisitDetector:
         xp, yp = self.geom.to_px(xm, ym)
         return self.geom.distance_to_cell_mm(xp, yp)
 
+    def facing(self, traj: pd.DataFrame) -> np.ndarray:
+        """Per row: 1 = faces the cell, 0 = doesn't, NaN = unknown (no position or an untrustworthy heading)."""
+        from ..trajectories import RELIABLE_HEADING
+
+        cx, cy = self.geom.to_px(traj["x_mm"].to_numpy(), traj["y_mm"].to_numpy())
+        hx, hy = self.geom.to_px(traj["head_x_mm"].to_numpy(), traj["head_y_mm"].to_numpy())
+        off = np.hypot(traj["head_x_mm"].to_numpy() - traj["x_mm"].to_numpy(),
+                       traj["head_y_mm"].to_numpy() - traj["y_mm"].to_numpy())
+        closer = self.geom.signed_cell_distance_mm(cx, cy) - self.geom.signed_cell_distance_mm(hx, hy)
+        out = (closer >= 0.5 * off).astype(float)
+        known = np.isfinite(closer) & (off > 0)
+        if "heading_source" in traj:  # ground-truth tables have no source: their heading is exact
+            known &= traj["heading_source"].isin(RELIABLE_HEADING).to_numpy()
+        out[~known] = np.nan
+        return out
+
     def detect(self, traj: pd.DataFrame, fps: float) -> pd.DataFrame:
         rows = []
         for bee, g in traj.groupby("bee_id", sort=True):
@@ -59,14 +84,17 @@ class VisitDetector:
             frames = g["frame"].to_numpy()
             dt = float(np.median(np.diff(frames))) / fps if len(frames) > 1 else 1 / fps
             conf = g["id_confidence"].to_numpy(float) if "id_confidence" in g else np.full(len(g), np.nan)
+            facing = self.facing(g)
             for zone in self.cfg.zones:
-                rows.extend(self._zone_visits(bee, zone, frames, dist, dt, fps, conf))
+                rows.extend(self._zone_visits(bee, zone, frames, dist, dt, fps, conf, facing))
         df = pd.DataFrame(rows, columns=VISIT_COLUMNS)
         return df.sort_values(["zone", "start_s", "bee_id"]).reset_index(drop=True)
 
-    def _zone_visits(self, bee, zone: Zone, frames, dist, dt, fps, conf):
+    def _zone_visits(self, bee, zone: Zone, frames, dist, dt, fps, conf, facing):
         known = np.isfinite(dist)
         inside = known & (np.nan_to_num(dist, nan=np.inf) <= zone.margin_mm)
+        if zone.facing:
+            inside &= np.nan_to_num(facing, nan=0.0) > 0
         if not inside.any():
             return []
         # bouts of inside
@@ -96,5 +124,7 @@ class VisitDetector:
                 "min_distance_mm": float(np.nanmin(seg_d)),
                 # how sure we are that it was this bee (mean over the visit; NaN where identity has no probability)
                 "id_probability": float(np.nanmean(conf[s:e + 1])) if np.isfinite(conf[s:e + 1]).any() else np.nan,
+                # share of the visit (frames with a trustworthy heading) in which the bee faced the cell
+                "facing_fraction": float(np.nanmean(facing[s:e + 1])) if np.isfinite(facing[s:e + 1]).any() else np.nan,
             })
         return out
