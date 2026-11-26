@@ -66,6 +66,9 @@ RIB_LEAD = 0.8          # the back end of each rib is tapered over this length, 
 
 # holes
 FEED_D = 10.5           # feeders: candy, water, pollen (9 mm was too small for the real feeders)
+# the foundation's holes are made 1 mm wider than the cage's: small holes in a thin flat print come out
+# undersized (first-layer squish), and the cage hole is the one that holds the feeder anyway
+FOUND_HOLE_D = FEED_D + 1.0
 FEED_X = (-30.0, 0.0, 30.0)
 FEED_Z = 10.0           # centre height of the feeder holes above the inside floor
 QC_D = 13.0             # queen-cell holder holes in the top wall
@@ -239,7 +242,7 @@ def foundation(ribs: bool = True) -> Manifold:
     while x <= x0 + w - edge:
         z = z0 + edge + (CELL / 2 if i % 2 else 0)
         while z <= z0 + h - edge:
-            if all(math.hypot(x - fx, z - (Z_FLOOR + FEED_Z)) > FEED_D / 2 + 1.8 + r for fx in FEED_X):
+            if all(math.hypot(x - fx, z - (Z_FLOOR + FEED_Z)) > FOUND_HOLE_D / 2 + 1.8 + r for fx in FEED_X):
                 # hexagon with flats facing up/down (vertex towards x), as a prism along y
                 hp = Manifold.cylinder(FOUND_T, r, r, 6).rotate([-90, 0, 0])
                 hexes.append(hp.translate([x, Y_FOUND + FOUND_BASE, z]))
@@ -250,7 +253,7 @@ def foundation(ribs: bool = True) -> Manifold:
     if ribs:
         sheet = union([sheet, foundation_ribs()])
     for fx in FEED_X:
-        sheet -= cyl_y(FEED_D, Y_FOUND - 1, Y_FOUND + FOUND_T + 1, fx, Z_FLOOR + FEED_Z)
+        sheet -= cyl_y(FOUND_HOLE_D, Y_FOUND - 1, Y_FOUND + FOUND_T + 1, fx, Z_FLOOR + FEED_Z)
     return sheet
 
 
@@ -525,15 +528,16 @@ def check() -> bool:
     v5 = ((fs ^ c) - band).volume()
     v5b = (union([f0.translate([0, dy, 0]) for dy in np.arange(0, CAGE_D + 2, 1.0)]) ^ c).volume()
     report(v5 < TOL and v5b < TOL, "foundation slides in/out through the front window; along the way only the rib tips rub the walls")
-    # the ribs can squash a little unevenly: push the sheet FOUND_CLR to each side and pass a tube through all 3 holes
-    tube = FEED_D - 2 * FOUND_CLR - 0.05
+    # the ribs can squash a little unevenly: push the sheet FOUND_CLR to each side; the foundation must never
+    # narrow the cage's feeder hole (a tube the full size of the cage hole still passes)
+    tube = FEED_D - 0.05
     hole_err = 0.0
     for dx, dz in ((0, 0), (FOUND_CLR, 0), (-FOUND_CLR, 0), (0, FOUND_CLR), (0, -FOUND_CLR)):
         fm = f0.translate([dx, 0, dz])
         for fx in FEED_X:
             probe = cyl_y(tube, -1, Y_BEE0 + 1, fx, Z_FLOOR + FEED_Z)
             hole_err = max(hole_err, (probe ^ (c + fm)).volume())
-    report(hole_err < TOL, f"foundation holes line up with the cage feeder holes: a {tube:.2f} mm tube passes even with the sheet pushed {FOUND_CLR} mm to any side")
+    report(hole_err < TOL, f"foundation holes Ø {FOUND_HOLE_D:.1f} never narrow the Ø {FEED_D:.1f} cage feeder holes: a {tube:.2f} mm tube passes even with the sheet pushed {FOUND_CLR} mm to any side")
 
     # 6. a cage with 3 holders in place slides straight in and out of every pocket
     loaded = c + holders

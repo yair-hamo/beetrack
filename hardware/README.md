@@ -42,7 +42,9 @@ rack and its stand**. The camera and light come later (see the end of this page)
     the ribs squash a little and grip. Tapered rib ends help it start; to take it out, lever it at a feeder hole.
   - Too tight: set `RIB_PRESS` to 0.05–0.1. Still loose: 0.25. Then reprint only the foundation; the cage
     doesn't change.
-  - Even if the ribs squash unevenly, a tube passes through the holes.
+  - **Its 3 holes are Ø 11.5 mm, 1 mm wider than the cage's 10.5 mm feeder holes.** Small holes in a thin flat
+    print come out smaller than drawn (the first layer squishes into them), and the cage hole is the one that
+    holds the feeder. So the foundation never narrows the hole, even if the ribs squash unevenly.
 - **Queen-cell caps** (`qc_cap.stl`): close any queen-cell hole you don't use. 3 per cage. A flat plug that
   sticks out only 1.6 mm; a small groove under one edge of its rim lets you lift it out with a screwdriver tip.
 - **Vents**: 23 horizontal slits per side, 1.8 mm high (bees can't pass), with 1.8 mm bars between them, over
