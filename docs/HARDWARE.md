@@ -1,5 +1,8 @@
 # Bee Imaging Rig: Queen + Worker Behaviour Tracking
 
+> **Superseded (November 2026)** by the 4-plate industrial-camera rig in [`hardware/`](../hardware/README.md)
+> (design, printable parts, shopping list). This page is kept for the background on marking, lighting and analysis.
+
 A low-cost, repeatable setup for filming **10 colour-marked worker bees and a queen cell (with a queen larva)** in a large petri dish for up to **48 hours**, recording several stations at once on one desktop PC, and turning the videos into **per-bee trajectories and queen-cell visits** (which worker visits, how often, for how long).
 
 **Software:** see the [main README](../README.md): analysis pipeline, web app, docs and tests.

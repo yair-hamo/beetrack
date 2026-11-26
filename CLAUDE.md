@@ -18,7 +18,8 @@ beetrack/                     ← repository root (github.com/yair-hamo/beetrack
 ├── LICENSE                   MIT
 ├── pyproject.toml            package metadata; version
 ├── config/default.yaml       all analysis parameters (regenerate: beetrack config-dump -o config/default.yaml)
-├── docs/                     HARDWARE (rig, camera, lighting, marking, budget) · ARCHITECTURE · PIPELINE ·
+├── hardware/                 the 4-plate recording rig: README (design), SHOPPING_LIST, cad/playground.py → cad/stl/
+├── docs/                     HARDWARE (older webcam plan) · ARCHITECTURE · PIPELINE ·
 │   │                         DATA_FORMATS · API · VALIDATION · SLEAP
 │   └── assets/               README GIFs (annotated, paths, heatmap) + concept drawing
 ├── src/beetrack/             the package (see §4)
@@ -248,6 +249,13 @@ occasionally hits a render timeout when the machine is busy; re-run before assum
   browser pop-up unreliable. A full native-UI rewrite (Qt) was considered and rejected: same result for
   users, months of work, loses the tested web UI. Head-direction work (PR #4) was dropped by the user for now
   (not accurate enough on real footage); its branch `feat/head-direction` is kept on GitHub.
+- Rig plan (2026-11-26, `hardware/`): one Hikrobot MV-CS050-10UC (colour, 5 MP, USB3) + 12 mm lens films **4
+  standing plates** (10 bees each, queen cell hanging, feeders through the back wall) at ≈ 8 px/mm, constant
+  CRI ≥ 90 LED light with cross-polarisation, in a 340 × 340 × 600 mm box in the bees' climate room. The user
+  chose colour paint (neon) over B/W tags and constant light (no IR night mode for now). Parts are generated
+  by `hardware/cad/playground.py` (manifold3d + trimesh, not project dependencies). **Next software work**:
+  GenICam recorder with live crop into one video per plate (10-min pieces), near-live analysis per piece and a
+  live dashboard, then a final whole-run pass.
 
 **Docs not yet updated for v0.3** (small, do it in a `docs/` PR): `docs/PIPELINE.md` §4c (probabilities,
 `id_source`, `silence_s`, `never_read`) and the mark-position section; `docs/DATA_FORMATS.md` (new columns
