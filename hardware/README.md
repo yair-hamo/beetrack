@@ -20,7 +20,7 @@ rack and its stand**. The camera and light come later (see the end of this page)
 | Glass route | **3 mm** wide, like the cages already in use: 2 mm glass + 1 mm play |
 
 - **White PETG body**, printed back-wall-down, no supports.
-- **3 feeder holes, Ø 10 mm**, in the back wall, low (centres 10 mm above the floor, at −30 / 0 / +30 mm):
+- **3 feeder holes, Ø 10.5 mm**, in the back wall, low (centres 10 mm above the floor, at −30 / 0 / +30 mm):
   candy, water, pollen. They stay open.
 - **3 queen-cell holes, Ø 13 mm**, in the top wall, above the same three positions. The queen-cell
   holder (the blue cup with a disc and a small peg) drops in from above; its disc rests on the top and sticks
@@ -31,12 +31,18 @@ rack and its stand**. The camera and light come later (see the end of this page)
 - **The queen-cell holders and caps lock the glass.** In a cage this shallow their discs (22 mm and 18 mm)
   reach over the glass slot and rest across the glass edge. So: **glass in first, then the holders/caps; to
   open, take the holders/caps out first, then slide the glass up.** The check tests both.
-- **Comb foundation** (`foundation.stl`, printed separately): a 99.4 × 89.4 mm sheet, 1 mm thick, with
+- **Comb foundation** (`foundation.stl`, printed separately): a 99.7 × 89.7 mm sheet, 1 mm thick, with
   worker-sized hexagonal cells (5.4 mm) whose walls stand **2 mm** above it (0.8 mm thick), 3 mm in total.
   Change `CELL_H` / `CELL_WALL` for deeper or bolder cells. It lies against the inside of the back wall and
   goes in and out through the front when the glass is off. Its 3 holes line up with the feeder holes, so
-  feeder tubes go through it. It has 0.3 mm of play on each side; a tube still passes even when the sheet is
-  pushed to one side. The sheet is whole: the queen cells hang just in front of it.
+  feeder tubes go through it. The sheet is whole: the queen cells hang just in front of it.
+  - **It is a press fit, so it can't fall forward.** The sheet has only 0.15 mm of gap to the walls, and
+    14 small round ribs (Ø 1.6 mm) on its edges (3 on each side, 4 on the bottom and 4 on the top) stick out
+    0.3 mm, so each presses 0.15 mm into the wall. Push it in flat with your thumbs until it touches the back wall:
+    the ribs squash a little and grip. Tapered rib ends help it start; to take it out, lever it at a feeder hole.
+  - Too tight: set `RIB_PRESS` to 0.05–0.1. Still loose: 0.25. Then reprint only the foundation; the cage
+    doesn't change.
+  - Even if the ribs squash unevenly, a tube passes through the holes.
 - **Queen-cell caps** (`qc_cap.stl`): close any queen-cell hole you don't use. 3 per cage. A flat plug that
   sticks out only 1.6 mm; a small groove under one edge of its rim lets you lift it out with a screwdriver tip.
 - **Vents**: 23 horizontal slits per side, 1.8 mm high (bees can't pass), with 1.8 mm bars between them, over
@@ -103,7 +109,7 @@ printed, but the check still tests it), and tests it:
   foundation, into the bees;
 - the queen-cell holders fit their holes, miss the foundation and the glass, the glass slides up and out once they are
   removed, and **with them in place the glass is held down**;
-- the glass fits its grooves; the foundation goes in and out through the front;
+- the glass fits its grooves; the foundation is a press fit (only its ribs touch the walls, 0.15 mm deep) and goes in and out through the front;
 - a cage with 3 queen cells slides into every pocket;
 - the stand is stable.
 

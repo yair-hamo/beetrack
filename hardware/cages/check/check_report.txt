@@ -1,20 +1,21 @@
 Fit check (python hardware/cages/cages.py check)
 
 [OK ] cage: one closed solid (1 piece), 110.0 x 100.0 x 27.0 mm fits the P2S bed
-[OK ] foundation: one closed solid (1 piece), 99.4 x 89.4 x 3.0 mm fits the P2S bed
+[OK ] foundation: one closed solid (1 piece), 100.3 x 90.3 x 3.0 mm fits the P2S bed
 [OK ] qc_cap: one closed solid (1 piece), 18.0 x 18.0 x 6.6 mm fits the P2S bed
 [OK ] rack: one closed solid (1 piece), 234.0 x 238.0 x 32.5 mm fits the P2S bed
 [OK ] stand: one closed solid (1 piece), 242.6 x 147.5 x 14.0 mm fits the P2S bed
 [OK ] all 22 parts together, no part overlaps another
-[OK ] 12 feeder holes open from behind the rack into the bees (a 9.4 mm tube passes)
+[OK ] 12 feeder holes open from behind the rack into the bees (a 9.9 mm tube passes)
 [OK ] 3 queen-cell holders (flange 22 mm, 8 mm above the top) sit in the top holes without hitting the cage
 [OK ] queen cells hang 1.0 mm in front of the foundation cells (foundation whole) and 1.0 mm from the glass: bee room 15.0 mm deep
 [OK ] holder discs stay on the cage top (3.5 mm from the back edge), clear of the rack
 [OK ] glass slides straight up and out of the top (once the queen-cell holders / caps are out)
 [OK ] with holders or caps in place the glass is held down: their discs rest across the slot
 [OK ] glass 104.0 x 97.0 x 2.0 mm sits in the grooves, top flush with the cage (0.5 mm play at each side and the bottom, 1.0 mm in thickness)
-[OK ] foundation 99.4 x 89.4 mm slides in/out through the front window
-[OK ] foundation holes line up with the cage feeder holes: a 9.35 mm tube passes even with the sheet pushed 0.3 mm to any side
+[OK ] foundation is a press fit: sheet 99.7 x 89.7 mm (0.15 mm gap), 14 ribs press 0.15 mm into the left, right, floor, roof; only the ribs touch the cage
+[OK ] foundation slides in/out through the front window; along the way only the rib tips rub the walls
+[OK ] foundation holes line up with the cage feeder holes: a 10.15 mm tube passes even with the sheet pushed 0.15 mm to any side
 [OK ] a cage with 3 queen cells slides into each pocket (0.5 mm each side, 4 mm over the holders)
 [OK ] rack pegs Ø 10.0 x 2.0 mm sit in the cage sockets Ø 10.3 x 2.2 mm (0.15 mm play all round, 0.2 mm free at the bottom)
 [OK ] caps stick out 1.6 mm (holders 8 mm)

@@ -57,9 +57,15 @@ FOUND_T = FOUND_BASE + CELL_H
 CELL = 5.4              # worker cell size, centre to centre (flat to flat)
 CELL_WALL = 0.8         # cell wall thickness (2 lines of a 0.4 mm nozzle)
 FIT = 0.3               # clearance around parts that go into each other
+# the foundation is a press fit, so it can't fall forward: the sheet itself has a small gap to the walls, and
+# round ribs on its 4 edges stand out past that gap and press into the walls (left, right, floor, roof)
+FOUND_CLR = 0.15        # gap between the sheet's edges and the walls
+RIB_PRESS = 0.15        # how far each rib presses into the wall. Too tight: 0.05-0.1. Still loose: 0.25.
+RIB_D = 1.6             # rib diameter (runs front-to-back over the full 3 mm thickness)
+RIB_LEAD = 0.8          # the back end of each rib is tapered over this length, so the sheet starts in easily
 
 # holes
-FEED_D = 10.0           # feeders: candy, water, pollen (9 mm was too small for the real feeders)
+FEED_D = 10.5           # feeders: candy, water, pollen (9 mm was too small for the real feeders)
 FEED_X = (-30.0, 0.0, 30.0)
 FEED_Z = 10.0           # centre height of the feeder holes above the inside floor
 QC_D = 13.0             # queen-cell holder holes in the top wall
@@ -217,10 +223,11 @@ def glass() -> Manifold:
     return box(GLASS_X0, GLASS_X1, y0, y0 + GLASS_T, GLASS_Z0, GLASS_Z0 + GLASS_L)
 
 
-def foundation() -> Manifold:
-    """Sheet with hexagonal worker cells; 3 holes line up with the feeder holes. Lies flat on the inside of the back wall."""
-    w, h = IN_W - 2 * FIT, IN_H - 2 * FIT
-    x0, z0 = -w / 2, Z_FLOOR + FIT
+def foundation(ribs: bool = True) -> Manifold:
+    """Sheet with hexagonal worker cells; 3 holes line up with the feeder holes. Lies flat on the inside of the back
+    wall, held by press-fit ribs on its edges."""
+    w, h = IN_W - 2 * FOUND_CLR, IN_H - 2 * FOUND_CLR
+    x0, z0 = -w / 2, Z_FLOOR + FOUND_CLR
     sheet = box(x0, x0 + w, Y_FOUND, Y_FOUND + FOUND_T, z0, z0 + h)
     # cells: hexagonal pockets in the front face, kept 1.5 mm from the edges and 1.8 mm from the holes
     r = (CELL - CELL_WALL) / math.sqrt(3)        # circumradius of a cell pocket
@@ -240,9 +247,31 @@ def foundation() -> Manifold:
         x += dx
         i += 1
     sheet -= Manifold.compose(hexes)
+    if ribs:
+        sheet = union([sheet, foundation_ribs()])
     for fx in FEED_X:
         sheet -= cyl_y(FEED_D, Y_FOUND - 1, Y_FOUND + FOUND_T + 1, fx, Z_FLOOR + FEED_Z)
     return sheet
+
+
+def foundation_ribs() -> Manifold:
+    """Round ribs along y on the 4 edges of the sheet; each stands RIB_PRESS past the wall it presses on."""
+    rr = RIB_D / 2
+    inset = rr - RIB_PRESS                        # rib centre, this far inside the wall line
+    def rib(x, z):
+        lead = Manifold.cylinder(RIB_LEAD, rr - 0.3, rr, SEG)
+        body = Manifold.cylinder(FOUND_T - RIB_LEAD, rr, rr, SEG).translate([0, 0, RIB_LEAD])
+        return union([lead, body]).rotate([-90, 0, 0]).translate([x, Y_FOUND, z])
+    zs = [Z_FLOOR + IN_H * k for k in (0.25, 0.5, 0.75)]
+    xs = (-40.0, -15.0, 15.0, 40.0)               # clear of the feeder holes at -30 / 0 / 30
+    out = [rib(sx * (IN_W / 2 - inset), z) for z in zs for sx in (-1, 1)]
+    out += [rib(x, Z_FLOOR + inset) for x in xs] + [rib(x, Z_ROOF - inset) for x in xs]
+    return Manifold.compose(out)
+
+
+def pressed(f: Manifold) -> Manifold:
+    """The foundation as it sits in the cage: the rib tips squashed flat against the walls."""
+    return f ^ box(-IN_W / 2, IN_W / 2, Y_FOUND - 1, Y_FOUND + FOUND_T + 1, Z_FLOOR, Z_ROOF)
 
 
 def qc_cap() -> Manifold:
@@ -393,7 +422,7 @@ def assembly():
     for i, (x, z) in enumerate(pocket_origins(), 1):
         at = [x, RACK_BACK, z]
         parts[f"cage{i}"] = c.translate(at)
-        parts[f"foundation{i}"] = f.translate(at)
+        parts[f"foundation{i}"] = pressed(f).translate(at)   # ribs squashed, as in the cage
         for j, qx in enumerate(QC_X, 1):
             parts[f"cap{i}.{j}"] = cap.translate([x + qx, RACK_BACK + QC_YW, z])
     return parts
@@ -471,19 +500,40 @@ def check() -> bool:
     report(v4 < TOL, f"glass {GLASS_W:.1f} x {GLASS_L:.1f} x {GLASS_T:.1f} mm sits in the grooves, top flush with the cage "
            f"(0.5 mm play at each side and the bottom, {GLASS_CLR:.1f} mm in thickness)")
 
-    # 5. the foundation goes in and out through the front window (glass removed)
+    # 5. the foundation is a press fit: ribs press into the walls, nothing else touches; it goes in and out
+    #    through the front window (glass removed)
+    f0 = foundation(ribs=False)
+    v_body = (f0 ^ c).volume()
+    v_ribs = (f ^ c).volume()
+    v_other = ((f ^ c) - foundation_ribs()).volume()
+    press = []
+    for d, probe in (("left", box(-IN_W / 2 - 1, -IN_W / 2, Y_FOUND, Y_BEE0, Z_FLOOR, Z_ROOF)),
+                     ("right", box(IN_W / 2, IN_W / 2 + 1, Y_FOUND, Y_BEE0, Z_FLOOR, Z_ROOF)),
+                     ("floor", box(-IN_W / 2, IN_W / 2, Y_FOUND, Y_BEE0, Z_FLOOR - 1, Z_FLOOR)),
+                     ("roof", box(-IN_W / 2, IN_W / 2, Y_FOUND, Y_BEE0, Z_ROOF, Z_ROOF + 1))):
+        bb = (f ^ probe).bounding_box()
+        depth = {"left": -IN_W / 2 - bb[0], "right": bb[3] - IN_W / 2, "floor": Z_FLOOR - bb[2], "roof": bb[5] - Z_ROOF}[d]
+        press.append((d, depth))
+    press_ok = all(abs(dp - RIB_PRESS) < 0.02 for _, dp in press)
+    report(v_body < TOL and v_ribs > TOL and v_other < TOL and press_ok,
+           f"foundation is a press fit: sheet {IN_W - 2 * FOUND_CLR:.1f} x {IN_H - 2 * FOUND_CLR:.1f} mm ({FOUND_CLR} mm gap), "
+           f"{len(foundation_ribs().decompose())} ribs press {RIB_PRESS} mm into the "
+           + ", ".join(f"{d}" for d, _ in press) + "; only the ribs touch the cage")
     fs = union([f.translate([0, dy, 0]) for dy in np.arange(0, CAGE_D + 2, 1.0)])
-    v5 = (fs ^ c).volume()
-    report(v5 < TOL, f"foundation {IN_W - 2 * FIT:.1f} x {IN_H - 2 * FIT:.1f} mm slides in/out through the front window")
-    # the sheet has FIT play on every side: push it to each side and pass a tube through all 3 holes
-    tube = FEED_D - 2 * FIT - 0.05
+    band = box(-IN_W / 2 - RIB_PRESS - 0.01, IN_W / 2 + RIB_PRESS + 0.01, -1, CAGE_D + 5,
+               Z_FLOOR - RIB_PRESS - 0.01, Z_ROOF + RIB_PRESS + 0.01)
+    v5 = ((fs ^ c) - band).volume()
+    v5b = (union([f0.translate([0, dy, 0]) for dy in np.arange(0, CAGE_D + 2, 1.0)]) ^ c).volume()
+    report(v5 < TOL and v5b < TOL, "foundation slides in/out through the front window; along the way only the rib tips rub the walls")
+    # the ribs can squash a little unevenly: push the sheet FOUND_CLR to each side and pass a tube through all 3 holes
+    tube = FEED_D - 2 * FOUND_CLR - 0.05
     hole_err = 0.0
-    for dx, dz in ((0, 0), (FIT, 0), (-FIT, 0), (0, FIT), (0, -FIT)):
-        fm = f.translate([dx, 0, dz])
+    for dx, dz in ((0, 0), (FOUND_CLR, 0), (-FOUND_CLR, 0), (0, FOUND_CLR), (0, -FOUND_CLR)):
+        fm = f0.translate([dx, 0, dz])
         for fx in FEED_X:
             probe = cyl_y(tube, -1, Y_BEE0 + 1, fx, Z_FLOOR + FEED_Z)
             hole_err = max(hole_err, (probe ^ (c + fm)).volume())
-    report(hole_err < TOL, f"foundation holes line up with the cage feeder holes: a {tube:.2f} mm tube passes even with the sheet pushed {FIT} mm to any side")
+    report(hole_err < TOL, f"foundation holes line up with the cage feeder holes: a {tube:.2f} mm tube passes even with the sheet pushed {FOUND_CLR} mm to any side")
 
     # 6. a cage with 3 holders in place slides straight in and out of every pocket
     loaded = c + holders
@@ -618,7 +668,7 @@ def summary():
     print(f"cage outside      {CAGE_W:.1f} x {CAGE_H:.1f} x {CAGE_D:.1f} mm (w x h x depth); inside {IN_W:.0f} x {IN_H:.0f}, "
           f"bees {BEE_D:.1f} mm deep (cell tops -> glass), {Y_GLASS - Y_FOUND:.1f} mm back wall -> glass")
     print(f"glass to order    {GLASS_W:.1f} x {GLASS_L:.1f} x {GLASS_T:.1f} mm  (x 4, + spares)")
-    print(f"foundation        {IN_W - 2 * FIT:.1f} x {IN_H - 2 * FIT:.1f} x {FOUND_T:.1f} mm")
+    print(f"foundation        {IN_W - 2 * FOUND_CLR:.1f} x {IN_H - 2 * FOUND_CLR:.1f} x {FOUND_T:.1f} mm + ribs pressing {RIB_PRESS} mm")
     print(f"rack              {RACK_W:.1f} x {RACK_H:.1f} x {RACK_D:.1f} mm; stand {STAND_W:.1f} x {STAND_D:.1f} mm")
     print(f"glass front face  {GLASS_FRONT_Y - STAND_HOLE_FRONT_Y:+.1f} mm from the stand's front M5 hole along the camera axis "
           f"(measure the camera distance from that hole)")
