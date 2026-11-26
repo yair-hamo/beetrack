@@ -12,7 +12,7 @@ What one cage needs (print / buy):
     cage.stl          1   white PETG   the cage: 3 feeder holes (back, low) + 3 queen-cell holes (top)
     foundation.stl    1   white/natural the comb foundation sheet that lies against the inside of the back wall
     qc_cap.stl        3   white PETG   caps that close the queen-cell holes that are not used
-    glass             1   2 mm glass, 106.5 x 94 mm (see GLASS_W / GLASS_L below), slides in from the right
+    glass             1   2 mm glass, 104 x 97 mm (see GLASS_W / GLASS_L below), slides in from the top
 And for the rack of 4 cages: rack.stl (1), stand.stl (1), 2 x M5x12 countersunk + nuts.
 
 World coordinates (used for the assembly): x = left -> right, y = back -> front (towards the camera),
@@ -38,16 +38,17 @@ IN_W = 100.0            # inside width
 IN_H = 90.0             # inside height (minimum 90)
 # (the depth of the bee room is not set here: it is made as small as the queen-cell holders allow, see below)
 WALL = 5.0              # left/right/bottom walls (they hold the glass groove)
-TOP_T = 5.0             # top wall (holds the queen-cell holes and the top glass groove)
+TOP_T = 5.0             # top wall (holds the queen-cell holes and the glass slot)
 BACK_T = 4.0            # back wall (holds the feeder holes)
 
-# glass cover: slides in SIDEWAYS, through a slot in the right wall, along grooves in the top, bottom and left
-# walls. So the queen-cell holders on top never block it, and the cage can be as shallow as the holders allow.
+# glass cover: slides down from the TOP, through a slot in the top wall, into grooves in the left, right and
+# bottom walls. Its top edge ends flush with the top of the cage. The queen-cell holders' discs (and the caps)
+# then rest across the slot and hold the glass down: glass in first, holders after; to open, holders out first.
 GLASS_T = 2.0           # measure your glass / perspex!
-GLASS_SLOT = 3.0        # width of the glass route (grooves + side slot); 3 mm like the cages already in use
+GLASS_SLOT = 3.0        # width of the glass route (grooves + top slot); 3 mm like the cages already in use
 GLASS_CLR = GLASS_SLOT - GLASS_T   # play, so the glass slides freely
-GROOVE = 2.5            # how deep the glass sits in the top, bottom and left walls
-LIP = 2.0               # wall in front of the glass on the top, bottom and left (holds it in); open on the right
+GROOVE = 2.5            # how deep the glass sits in the left, right and bottom walls
+LIP = 2.0               # wall in front of the glass on the left, right and bottom (holds it in); open at the top
 
 # comb foundation sheet (printed separately, lies on the inside of the back wall)
 FOUND_BASE = 1.0        # the flat sheet
@@ -58,7 +59,7 @@ CELL_WALL = 0.8         # cell wall thickness (2 lines of a 0.4 mm nozzle)
 FIT = 0.3               # clearance around parts that go into each other
 
 # holes
-FEED_D = 9.0            # feeders: candy, water, pollen
+FEED_D = 10.0           # feeders: candy, water, pollen (9 mm was too small for the real feeders)
 FEED_X = (-30.0, 0.0, 30.0)
 FEED_Z = 10.0           # centre height of the feeder holes above the inside floor
 QC_D = 13.0             # queen-cell holder holes in the top wall
@@ -128,11 +129,11 @@ CAGE_W = IN_W + 2 * WALL
 Z_FLOOR = WALL
 Z_ROOF = WALL + IN_H
 CAGE_H = Z_ROOF + TOP_T
-GLASS_X0 = -IN_W / 2 - GROOVE + 0.5                                 # left end, in the left groove
-GLASS_X1 = CAGE_W / 2 - 0.5                                         # right end, flush with the right wall
+GLASS_X0 = -IN_W / 2 - GROOVE + 0.5                                 # 0.5 mm play at each side
+GLASS_X1 = IN_W / 2 + GROOVE - 0.5
 GLASS_W = GLASS_X1 - GLASS_X0                                       # glass to order (width)
-GLASS_Z0 = Z_FLOOR - GROOVE + 0.5
-GLASS_L = IN_H + 2 * GROOVE - 1.0                                   # glass to order (height)
+GLASS_Z0 = Z_FLOOR - GROOVE + 0.5                                   # 0.5 mm above the bottom of the groove
+GLASS_L = CAGE_H - GLASS_Z0                                         # glass to order (height): top flush with the cage
 
 POCKET_W = CAGE_W + 2 * POCKET_CLR
 POCKET_H = CAGE_H + QC_ABOVE + HEAD_ROOM
@@ -186,11 +187,12 @@ def cage() -> Manifold:
     body = box(-hw, hw, 0, CAGE_D, 0, CAGE_H)
     # the room: foundation + bees
     body -= box(-IN_W / 2, IN_W / 2, Y_FOUND, Y_GLASS + 0.01, Z_FLOOR, Z_ROOF)
-    # glass route: grooves in the left, top and bottom walls, and straight out through the right wall
-    body -= box(-IN_W / 2 - GROOVE, hw + 1, Y_GLASS, Y_LIP, Z_FLOOR - GROOVE, Z_ROOF + GROOVE)
-    # front window, open to the right (the lip holds the glass on the left, top and bottom; on the right the
-    # glass edge is free, to push it out with a thumb)
-    body -= box(-IN_W / 2, hw + 1, Y_LIP - 0.01, CAGE_D + 1, Z_FLOOR, Z_ROOF)
+    # glass route: grooves in the left, right and bottom walls, and straight up through the top wall
+    gw = IN_W / 2 + GROOVE
+    body -= box(-gw, gw, Y_GLASS, Y_LIP, Z_FLOOR - GROOVE, CAGE_H + 1)
+    # front window, open to the top (the lip holds the glass at the sides and the bottom; nothing bridges over
+    # the slot, so the cage prints without supports; push the glass up with a thumb on its face)
+    body -= box(-IN_W / 2, IN_W / 2, Y_LIP - 0.01, CAGE_D + 1, Z_FLOOR, CAGE_H + 1)
     # feeder holes: back wall, low
     for x in FEED_X:
         body -= cyl_y(FEED_D, -1, Y_FOUND + 0.01, x, Z_FLOOR + FEED_Z)
@@ -457,12 +459,17 @@ def check() -> bool:
            f"and {Y_GLASS - QC_YW - QC_D / 2:.1f} mm from the glass: bee room {BEE_D:.1f} mm deep")
     disc_back = QC_YW - QC_FLANGE_D / 2
     report(disc_back >= 0, f"holder discs stay on the cage top ({disc_back:.1f} mm from the back edge), clear of the rack")
-    sweep = union([g.translate([dx, 0, 0]) for dx in np.arange(0, GLASS_W + 2, 2.0)])
-    v3 = (sweep ^ (c + holders)).volume()
-    report(v3 < TOL, "glass slides out sideways (to the right) with all 3 queen cells in place")
-    v4 = (g ^ c).volume()
-    report(v4 < TOL, f"glass {GLASS_W:.1f} x {GLASS_L:.1f} x {GLASS_T:.1f} mm sits in the grooves "
-           f"(0.5 mm play at the ends, {GLASS_CLR:.1f} mm in thickness)")
+    sweep = union([g.translate([0, 0, dz]) for dz in np.arange(0, GLASS_L + 2, 2.0)])
+    v3 = (sweep ^ c).volume()
+    report(v3 < TOL, "glass slides straight up and out of the top (once the queen-cell holders / caps are out)")
+    caps = union([qc_cap().translate([qx, QC_YW, 0]) for qx in QC_X])
+    lift = g.translate([0, 0, 0.5])
+    held_h = (lift ^ holders).volume() > TOL
+    held_c = (lift ^ caps).volume() > TOL
+    report(held_h and held_c, "with holders or caps in place the glass is held down: their discs rest across the slot")
+    v4 = (g ^ (c + holders)).volume() + (g ^ caps).volume()
+    report(v4 < TOL, f"glass {GLASS_W:.1f} x {GLASS_L:.1f} x {GLASS_T:.1f} mm sits in the grooves, top flush with the cage "
+           f"(0.5 mm play at each side and the bottom, {GLASS_CLR:.1f} mm in thickness)")
 
     # 5. the foundation goes in and out through the front window (glass removed)
     fs = union([f.translate([0, dy, 0]) for dy in np.arange(0, CAGE_D + 2, 1.0)])

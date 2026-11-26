@@ -16,19 +16,21 @@ rack and its stand**. The camera and light come later (see the end of this page)
 |---|---|
 | Outside | **110 × 100 × 27 mm** (width × height × depth) |
 | Room for the bees | 100 × 90 mm, **15 mm deep** from the cell tops to the glass (18 mm from the back wall) |
-| Glass to order | **106.5 × 94 × 2 mm**, 4 + spares (not printed) |
+| Glass to order | **104 × 97 × 2 mm**, 4 + spares (not printed) |
 | Glass route | **3 mm** wide, like the cages already in use: 2 mm glass + 1 mm play |
 
 - **White PETG body**, printed back-wall-down, no supports.
-- **3 feeder holes, Ø 9 mm**, in the back wall, low (centres 10 mm above the floor, at −30 / 0 / +30 mm):
+- **3 feeder holes, Ø 10 mm**, in the back wall, low (centres 10 mm above the floor, at −30 / 0 / +30 mm):
   candy, water, pollen. They stay open.
 - **3 queen-cell holes, Ø 13 mm**, in the top wall, above the same three positions. The queen-cell
   holder (the blue cup with a disc and a small peg) drops in from above; its disc rests on the top and sticks
   out about 8 mm.
-- **Glass cover slides in and out sideways**, from the **right**: through a slot in the right wall, along
-  grooves in the top, bottom and left walls. The front is open on the right, so you push the glass out with a
-  thumb on its face. It comes out at any time, with the queen cells in place. Inside the rack, the pocket wall
-  stops it from sliding out.
+- **Glass cover slides in from the top**: down through a 3 mm slot in the top wall into grooves in the left,
+  right and bottom walls. Its top edge ends **flush with the top of the cage**. The front is open at the top,
+  so you push the glass up with a thumb on its face.
+- **The queen-cell holders and caps lock the glass.** In a cage this shallow their discs (22 mm and 18 mm)
+  reach over the glass slot and rest across the glass edge. So: **glass in first, then the holders/caps; to
+  open, take the holders/caps out first, then slide the glass up.** The check tests both.
 - **Comb foundation** (`foundation.stl`, printed separately): a 99.4 × 89.4 mm sheet, 1 mm thick, with
   worker-sized hexagonal cells (5.4 mm) whose walls stand **2 mm** above it (0.8 mm thick), 3 mm in total.
   Change `CELL_H` / `CELL_WALL` for deeper or bolder cells. It lies against the inside of the back wall and
@@ -49,7 +51,9 @@ The cage is made **as shallow as the queen-cell holders allow**, so bees can't t
 - Each queen cell hangs **1 mm in front of the foundation cells** (the sheet stays whole) and **1 mm behind
   the glass**. With the 13 mm holes that gives **15 mm from the cell tops to the glass** (18 mm from the back
   wall).
-- The glass slides out sideways, so the holders' 22 mm discs (wider than the bee room) don't block it.
+- The holders' 22 mm discs are wider than the bee room, so they cover the glass slot: that is why the glass
+  has to come out after them (above). Letting the glass out with holders in place would need about 20 mm of
+  bee room (the first design).
 - The discs still fit on the top of the cage, 3.5 mm from its back edge, clear of the rack.
 
 **Measure your holders** (tube and disc) and the length of a hanging queen cell, then set `QC_D`,
@@ -78,10 +82,9 @@ The cage is made **as shallow as the queen-cell holders allow**, so bees can't t
     profile, and the camera distance is fixed and repeatable. Reference: the front face of the glass is
     **37 mm behind the stand's front M5 hole**, so measure the camera distance from that hole.
 
-Order of work with a cage: put in the foundation, then the glass (from the right) and the queen cells (from
-above), in either order; add the bees with the glass part-way open; slide the cage into its pocket; push the
-feeders in from behind. To take the glass out, slide the
-cage out of the rack first.
+Order of work with a cage: foundation in; glass down from the top; bees in (through a queen-cell hole, or
+with the glass part-way up); queen-cell holders and caps in; slide the cage into its pocket; push the feeders
+in from behind. To open it: cage out of the rack, holders and caps out, glass up.
 
 ## The fit check
 
@@ -98,8 +101,8 @@ printed, but the check still tests it), and tests it:
 - **no two of the 22 parts overlap**, and the rack's pegs fit the cage sockets;
 - all 12 feeder holes are open in a straight line from behind the rack, through the rack, the cage and the
   foundation, into the bees;
-- the queen-cell holders fit their holes, miss the foundation and the glass, and **the glass slides out sideways with
-  all 3 in place**;
+- the queen-cell holders fit their holes, miss the foundation and the glass, the glass slides up and out once they are
+  removed, and **with them in place the glass is held down**;
 - the glass fits its grooves; the foundation goes in and out through the front;
 - a cage with 3 queen cells slides into every pocket;
 - the stand is stable.
