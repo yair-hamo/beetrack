@@ -252,7 +252,7 @@ occasionally hits a render timeout when the machine is busy; re-run before assum
 - Rig plan (2026-11-26, `hardware/`): one Hikrobot MV-CS050-10UC (colour, 5 MP, USB3) + 12 mm lens to film **4
   standing cages** at ≈ 8 px/mm under constant CRI ≥ 90 light with cross-polarisation, in the bees' climate
   room. The user chose colour paint (neon) over B/W tags and constant light (no IR night mode for now).
-  Cage redesign (same day): white cages 110 × 99 × 32 mm (bees 100 × 90 × 20 mm, 3 mm glass route, top front open), 3 × Ø 9 feeder holes low in
+  Cage redesign (same day): white cages 110 × 100 × 24 mm (bees 100 × 90 mm, as shallow as the queen-cell holes allow: 12 mm from the cell tops, glass slides out sideways, 3 mm route), 3 × Ø 9 feeder holes low in
   the back, 3 × Ø 13 queen-cell holes in the top (holder disc ≈ 22 mm sticks out 8 mm, so cages are separate
   pockets with head room), printed comb foundation with matching holes, caps for unused queen holes, a 2 × 2
   rack and a stand (table or 2020 rail). Camera/light/box parts were removed for now. Parts and the fit check

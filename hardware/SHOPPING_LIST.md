@@ -16,7 +16,7 @@ Prices are rough (November 2026), in shekels, and should be checked when orderin
 | # | Item | Qty | Must have | Link | ≈ ₪ |
 |---|---|---|---|---|---|
 | N1 | **PETG filament, white** | 2 kg | PETG, not PLA (PLA softens in a warm bee room). All parts together use about 1 kg; the rest is for test prints and spares. | [Bambu PETG HF](https://bambulab.com/en/filament/petg-hf) | 200–300 |
-| N2 | **Glass, 2 mm, cut to 104.0 × 99.0 mm**, edges ground ("seamed") | 8 (4 + spares) | Clear float glass, from a local glazier. **Order after printing one test cage**, and measure the real thickness: if it isn't 2.0 mm, change `GLASS_T` and reprint. Perspex: only *cast* acrylic (see README). | Local glazier | 40–120 |
+| N2 | **Glass, 2 mm, cut to 106.5 × 94.0 mm**, edges ground ("seamed") | 8 (4 + spares) | Clear float glass, from a local glazier. **Order after printing one test cage**, and measure the real thickness: if it isn't 2.0 mm, change `GLASS_T` and reprint. Perspex: only *cast* acrylic (see README). | Local glazier | 40–120 |
 | N3 | Neodymium magnet discs **10 × 2 mm** | 20 (16 + spares) | N35 or stronger. 2 in each cage, 2 in each rack pocket. | [Search](https://www.aliexpress.com/w/wholesale-neodymium-magnet-10x2mm.html) | 15–30 |
 | N4 | **M5 × 12 countersunk screws** + **M5 hex nuts** | 2 + 2 (a small pack) | Countersunk (flat head, 90°), to fix the rack to the stand. | [Search](https://www.aliexpress.com/w/wholesale-M5-countersunk-screw-kit-nuts.html) | 10–20 |
 | N5 | Stick-on **rubber feet, Ø 10 mm** | 4 | So the stand doesn't slide on the table. | [Search](https://www.aliexpress.com/w/wholesale-rubber-feet-10mm-self-adhesive.html) | 5–15 |
