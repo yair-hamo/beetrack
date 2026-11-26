@@ -14,8 +14,8 @@ rack and its stand**. The camera and light come later (see the end of this page)
 
 | | Size |
 |---|---|
-| Outside | **110 × 100 × 24 mm** (width × height × depth) |
-| Room for the bees | 100 × 90 mm, **12 mm deep** from the cell tops to the glass (15 mm from the back wall) |
+| Outside | **110 × 100 × 27 mm** (width × height × depth) |
+| Room for the bees | 100 × 90 mm, **15 mm deep** from the cell tops to the glass (18 mm from the back wall) |
 | Glass to order | **106.5 × 94 × 2 mm**, 4 + spares (not printed) |
 | Glass route | **3 mm** wide, like the cages already in use: 2 mm glass + 1 mm play |
 
@@ -34,7 +34,7 @@ rack and its stand**. The camera and light come later (see the end of this page)
   Change `CELL_H` / `CELL_WALL` for deeper or bolder cells. It lies against the inside of the back wall and
   goes in and out through the front when the glass is off. Its 3 holes line up with the feeder holes, so
   feeder tubes go through it. It has 0.3 mm of play on each side; a tube still passes even when the sheet is
-  pushed to one side. **3 notches** (15 mm wide, 32 mm deep) at its top edge leave room for the queen cells.
+  pushed to one side. The sheet is whole: the queen cells hang just in front of it.
 - **Queen-cell caps** (`qc_cap.stl`): close any queen-cell hole you don't use. 3 per cage.
 - **Vents**: 23 horizontal slits per side, 1.8 mm high (bees can't pass), with 1.8 mm bars between them, over
   the whole height of both side walls. The rack walls beside them are open too.
@@ -44,27 +44,26 @@ rack and its stand**. The camera and light come later (see the end of this page)
 
 The cage is made **as shallow as the queen-cell holders allow**, so bees can't turn over inside:
 
-- Each queen cell hangs **1 mm in front of the back wall**, in a notch in the foundation (like a queen cell
-  on the face of a real comb), and **1 mm behind the glass**. With the 13 mm holes that gives **15 mm from the
-  back wall to the glass, 12 mm from the cell tops**.
+- Each queen cell hangs **1 mm in front of the foundation cells** (the sheet stays whole) and **1 mm behind
+  the glass**. With the 13 mm holes that gives **15 mm from the cell tops to the glass** (18 mm from the back
+  wall).
 - The glass slides out sideways, so the holders' 22 mm discs (wider than the bee room) don't block it.
-- The discs still fit on the top of the cage, 0.5 mm from its back edge, clear of the rack.
+- The discs still fit on the top of the cage, 3.5 mm from its back edge, clear of the rack.
 
 **Measure your holders** (tube and disc) and the length of a hanging queen cell, then set `QC_D`,
-`QC_FLANGE_D` and `QC_CELL_LEN` in `cages.py` and run it again. The depth follows automatically. If you'd
-rather not notch the foundation, the holes can sit in front of the cells instead: the room becomes 2.5 mm
-deeper (`QC_WALL_GAP = 3.5`).
+`QC_FLANGE_D` and `QC_CELL_LEN` in `cages.py` and run it again. The depth follows automatically
+(`QC_COMB_GAP` and `QC_GLASS_GAP` set the 1 mm gaps).
 
 ## The rack and the stand
 
-- **Rack** (`rack.stl`, 234 × 238 × 29.5 mm): 2 × 2 **separate pockets**, each with a floor, a wall on each side,
+- **Rack** (`rack.stl`, 234 × 238 × 32.5 mm): 2 × 2 **separate pockets**, each with a floor, a wall on each side,
   a back wall and **12 mm of space above the cage** for the queen-cell holders (4 mm to spare). A cage with its
   queen cells in place slides straight in from the front and is held by 2 magnets at the back.
   - Ø 14 mm holes in the back wall line up with every cage's feeder holes, so **feeders are pushed in and
     refilled from behind**, without touching the cage.
   - Windows in the walls beside each cage's vents, over their whole height, let air through.
   - The fronts of the cages are flush with the front of the rack, all 4 glasses in one plane.
-- **Stand** (`stand.stl`, 243 × 145 mm): the rack drops into a rim and is fixed with **2 countersunk
+- **Stand** (`stand.stl`, 243 × 148 mm): the rack drops into a rim and is fixed with **2 countersunk
   M5 × 12 screws** down through the floors of the lower pockets. Their heads sit flush, so the cages slide over
   them. The nuts go into hexagonal pockets under the stand.
   - **On a table:** the stand reaches 55 mm behind and 60 mm in front of the rack, so it won't tip unless

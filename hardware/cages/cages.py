@@ -67,8 +67,8 @@ QC_X = (-30.0, 0.0, 30.0)
 # queen-cell holder (the blue plastic cup with a disc on top). MEASURE YOURS: the disc decides where the holes go.
 QC_FLANGE_D = 22.0      # disc that rests on the top wall
 QC_ABOVE = 8.0          # how far the holder sticks out above the top wall
-QC_CELL_LEN = 30.0      # how far the cup + cell hang down into the cage (the foundation is notched this deep)
-QC_WALL_GAP = 1.0       # hole edge -> inside of the back wall (the cell hangs in a notch in the foundation)
+QC_CELL_LEN = 30.0      # how far the cup + cell hang down into the cage
+QC_COMB_GAP = 1.0       # hole edge -> tops of the foundation cells (the foundation stays whole)
 QC_GLASS_GAP = 1.0      # hole edge -> glass route
 
 # cap for an unused queen-cell hole
@@ -112,14 +112,13 @@ CHECK = HERE / "check"
 G = GLASS_T + GLASS_CLR
 Y_FOUND = BACK_T                         # inside face of the back wall
 Y_BEE0 = Y_FOUND + FOUND_T               # front face of the foundation (tops of the cells)
-# The queen-cell holes decide the depth: each hole sits QC_WALL_GAP in front of the back wall (but far enough
-# forward that the holder's disc doesn't stick out behind the cage), and the glass comes QC_GLASS_GAP in front
-# of the hole. Everything else follows.
-QC_YW = max(Y_FOUND + QC_WALL_GAP + QC_D / 2, QC_FLANGE_D / 2 + 0.5)   # hole centre, world y
+# The queen-cell holes decide the depth: each hole sits QC_COMB_GAP in front of the foundation cells (and far
+# enough forward that the holder's disc doesn't stick out behind the cage), and the glass comes QC_GLASS_GAP
+# in front of the hole. Everything else follows.
+QC_YW = max(Y_BEE0 + QC_COMB_GAP + QC_D / 2, QC_FLANGE_D / 2 + 0.5)    # hole centre, world y
 Y_GLASS = QC_YW + QC_D / 2 + QC_GLASS_GAP                            # back of the glass groove
 BEE_D = Y_GLASS - Y_BEE0                 # bee room: cell tops -> glass
-QC_Y = QC_YW - Y_BEE0                    # hole centre, from the cell tops (negative part = inside the notch)
-NOTCH = QC_YW - QC_D / 2 < Y_BEE0        # the cells hang partly in the foundation's plane -> notch it
+QC_Y = QC_YW - Y_BEE0                    # hole centre, from the cell tops
 Y_LIP = Y_GLASS + G                      # back of the front lip
 CAGE_D = Y_LIP + LIP                     # cage depth (back -> front)
 CAGE_W = IN_W + 2 * WALL
@@ -238,11 +237,6 @@ def foundation() -> Manifold:
     sheet -= Manifold.compose(hexes)
     for fx in FEED_X:
         sheet -= cyl_y(FEED_D, Y_FOUND - 1, Y_FOUND + FOUND_T + 1, fx, Z_FLOOR + FEED_Z)
-    # notches from the top edge where the queen cells hang (they sit partly in the foundation's plane)
-    if NOTCH:
-        for qx in QC_X:
-            sheet -= box(qx - QC_D / 2 - 1, qx + QC_D / 2 + 1, Y_FOUND - 1, Y_FOUND + FOUND_T + 1,
-                         Z_ROOF - QC_CELL_LEN - 2, Z_ROOF + 1)
     return sheet
 
 
@@ -451,9 +445,9 @@ def check() -> bool:
     v1 = (holders ^ c).volume()
     report(v1 < TOL, f"3 queen-cell holders (flange {QC_FLANGE_D:.0f} mm, {QC_ABOVE:.0f} mm above the top) sit in the top holes without hitting the cage")
     v2 = (holders ^ f).volume()
-    report(v2 < TOL, f"queen cells hang {QC_YW - QC_D / 2 - Y_FOUND:.1f} mm from the back wall"
-           + (f" (in {QC_CELL_LEN + 2:.0f} mm notches in the foundation)" if NOTCH else "")
-           + f" and {Y_GLASS - QC_YW - QC_D / 2:.1f} mm from the glass: bee room {BEE_D:.1f} mm deep")
+    report(v2 < TOL and QC_Y - QC_D / 2 > 0,
+           f"queen cells hang {QC_Y - QC_D / 2:.1f} mm in front of the foundation cells (foundation whole) "
+           f"and {Y_GLASS - QC_YW - QC_D / 2:.1f} mm from the glass: bee room {BEE_D:.1f} mm deep")
     disc_back = QC_YW - QC_FLANGE_D / 2
     report(disc_back >= 0, f"holder discs stay on the cage top ({disc_back:.1f} mm from the back edge), clear of the rack")
     sweep = union([g.translate([dx, 0, 0]) for dx in np.arange(0, GLASS_W + 2, 2.0)])
