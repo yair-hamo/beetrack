@@ -6,7 +6,7 @@ Fit check (python hardware/cages/cages.py check)
 [OK ] rack: one closed solid (1 piece), 234.0 x 238.0 x 32.5 mm fits the P2S bed
 [OK ] stand: one closed solid (1 piece), 242.6 x 147.5 x 14.0 mm fits the P2S bed
 [OK ] all 22 parts together, no part overlaps another
-[OK ] 12 feeder holes open from behind the rack into the bees (a 9.9 mm tube passes)
+[OK ] 12 feeder holes open from behind the rack into the bees (a 10.45 mm tube passes straight through rack, cage and foundation)
 [OK ] 3 queen-cell holders (flange 22 mm, 8 mm above the top) sit in the top holes without hitting the cage
 [OK ] queen cells hang 1.0 mm in front of the foundation cells (foundation whole) and 1.0 mm from the glass: bee room 15.0 mm deep
 [OK ] holder discs stay on the cage top (3.5 mm from the back edge), clear of the rack
@@ -18,7 +18,8 @@ Fit check (python hardware/cages/cages.py check)
 [OK ] foundation feeder holes are exactly the cage's: Ø 10.5 mm, same centres (x=-30: foundation Ø 10.50 / cage Ø 10.50, centres 0.00 mm apart; x=+0: foundation Ø 10.50 / cage Ø 10.50, centres 0.00 mm apart; x=+30: foundation Ø 10.50 / cage Ø 10.50, centres 0.00 mm apart)
 [OK ] even if the ribs squash unevenly and the sheet sits 0.15 mm off to any side, a 10.15 mm tube passes all 3 holes
 [OK ] a cage with 3 queen cells slides into each pocket (0.5 mm each side, 4 mm over the holders)
-[OK ] rack pegs Ø 10.0 x 2.0 mm sit in the cage sockets Ø 10.3 x 2.2 mm (0.15 mm play all round, 0.2 mm free at the bottom)
+[OK ] rack pegs are a press fit: core Ø 10.0 (0.15 mm gap), 6 ribs per peg press 0.15 mm into the Ø 10.3 socket wall; only the ribs touch; 0.2 mm free at the bottom so the cage rests on the rack's back wall: the cage can't slide out on its own
+[OK ] rack holes behind all 12 feeder holes are exactly the cage's: Ø 10.5 mm, same centres
 [OK ] caps stick out 1.6 mm (holders 8 mm)
 [OK ] gap above each cage 12 mm, rack wall between cages 4 mm
 [OK ] stand reaches 55 mm behind and 60 mm in front of the rack: tips over only past ~25 degrees

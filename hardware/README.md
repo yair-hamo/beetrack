@@ -71,12 +71,16 @@ The cage is made **as shallow as the queen-cell holders allow**, so bees can't t
 
 - **Rack** (`rack.stl`, 234 × 238 × 32.5 mm): 2 × 2 **separate pockets**, each with a floor, a wall on each side,
   a back wall and **12 mm of space above the cage** for the queen-cell holders (4 mm to spare). A cage with its
-  queen cells in place slides straight in from the front; at the back, **2 pegs** (Ø 10 × 2 mm, bevelled tip)
-  go into the cage's sockets and lock it in position left/right and up/down. The cage sits on the pocket floor
-  between the pocket walls; nothing to glue. If the pegs feel loose, set `PEG_D` to 10.1 or 10.2 and reprint
-  the rack (the cages don't change).
-  - Ø 14 mm holes in the back wall line up with every cage's feeder holes, so **feeders are pushed in and
-    refilled from behind**, without touching the cage.
+  queen cells in place slides straight in from the front; at the back, **2 pegs** go into the cage's sockets.
+  The cage sits on the pocket floor between the pocket walls; nothing to glue.
+  - **The pegs press-fit, so a cage can't slide or fall out on its own.** Each peg is a Ø 10 × 2 mm core
+    (0.15 mm gap in the Ø 10.3 socket) with **6 small ribs** that press 0.15 mm into the socket wall. Push the
+    cage in until it touches the back wall; to take it out, pull it straight forward. The pegs also fix it
+    left/right and up/down, so every cage sits in exactly the same place.
+  - Too tight: set `PEG_PRESS` to 0.05–0.1. Too loose: 0.25. Then reprint only the rack; the cages don't change.
+  - **The holes in the back wall are exactly the cage's feeder holes: Ø 10.5 mm, same centres**, so
+    **feeders are pushed in and refilled from behind**, through the rack, the cage and the foundation in one
+    straight line.
   - Windows in the walls beside each cage's vents, over their whole height, let air through.
   - The fronts of the cages are flush with the front of the rack, all 4 glasses in one plane.
 - **Stand** (`stand.stl`, 243 × 148 mm): the rack drops into a rim and is fixed with **2 countersunk
@@ -105,8 +109,10 @@ foundation and 3 caps, the rack's pegs in the cage sockets; only the feeder hole
 printed, but the check still tests it), and tests it:
 
 - every part is one closed solid (nothing loose or floating) and fits the P2S bed (256 × 256 × 256 mm);
-- **no two of the 22 parts overlap**, and the rack's pegs fit the cage sockets;
-- all 12 feeder holes are open in a straight line from behind the rack, through the rack, the cage and the
+- **no two of the 22 parts overlap** (the ribs on the foundation and the pegs are counted as squashed, as when fitted);
+- the rack's pegs press-fit the cage sockets: only their ribs touch, 0.15 mm deep, so the cages can't slide out;
+- the holes in the rack, the cage and the foundation are **exactly the same size, on the same centres** (measured from the parts);
+- all 12 feeder holes are open in a straight line (a 10.45 mm tube) from behind the rack, through the rack, the cage and the
   foundation, into the bees;
 - the queen-cell holders fit their holes, miss the foundation and the glass, the glass slides up and out once they are
   removed, and **with them in place the glass is held down**;

@@ -90,9 +90,15 @@ VENT_W, VENT_PITCH = 1.8, 3.6   # slit height, slit-to-slit (1.8 mm bars between
 # locating sockets in the back of each cage (2 per cage, Ø 10.3 x 2.2 mm) and the matching pegs on the rack
 SOCKET_D, SOCKET_T = 10.3, 2.2    # the sockets in the cage (first made for 10 x 2 mm magnets)
 SOCKET_X, SOCKET_Z = 38.0, 80.0   # from the cage centre / from the cage bottom
-PEG_D = 10.0                      # peg on the rack: 0.15 mm play all round in the socket (10.1-10.2 = tighter)
+PEG_D = 10.0                      # peg core on the rack: 0.15 mm gap all round in the socket
 PEG_L = 2.0                       # 0.2 mm shorter than the socket is deep, so the cage still touches the rack
-PEG_CHAMFER = 0.6                 # bevelled tip, guides the cage onto the pegs
+PEG_CHAMFER = 0.4                 # bevelled tip, guides the cage onto the pegs
+# the pegs are a press fit, so a cage can't slide or fall out of its pocket: small round ribs on each peg stand
+# out past the gap and press into the socket wall (same idea as the foundation ribs)
+PEG_RIBS = 6                      # ribs per peg
+PEG_RIB_D = 1.2
+PEG_PRESS = 0.15                  # how far each rib presses into the socket wall. Too tight: 0.05-0.1. Loose: 0.25.
+PEG_RIB_LEAD = 0.4                # the front end of each rib is tapered, so the cage starts onto the pegs easily
 
 # rack: 2 x 2 pockets, each with a floor, walls on both sides, a back wall and room above for the queen cells
 RACK_WALL = 4.0
@@ -100,7 +106,7 @@ RACK_BACK = 5.0
 RACK_FLOOR = 6.0        # the bottom slab (the countersunk screws to the stand go through it)
 POCKET_CLR = 0.5        # cage <-> pocket walls, each side
 HEAD_ROOM = 4.0         # above the queen-cell holders
-RACK_HOLE_D = 14.0      # holes in the rack back wall behind the feeder holes
+# the holes in the rack back wall behind the feeder holes are exactly the cage's (FEED_D, same centres)
 
 # stand: the rack drops into it; it stands on a table or bolts onto a 2020 aluminium profile
 STAND_T = 8.0
@@ -292,12 +298,28 @@ def qc_holder_dummy() -> Manifold:
     return tube + fl + peg
 
 
-def peg() -> Manifold:
-    """Locating peg pointing forward (+y) from y = 0, with a bevelled tip."""
+def peg(ribs: bool = True) -> Manifold:
+    """Locating peg pointing forward (+y) from y = 0, with a bevelled tip and press-fit ribs."""
     straight = PEG_L - PEG_CHAMFER
     body = cyl_y(PEG_D, -0.5, straight)          # 0.5 mm into the rack wall, so it joins it
     tip = Manifold.cylinder(PEG_CHAMFER, PEG_D / 2, PEG_D / 2 - PEG_CHAMFER, SEG).rotate([-90, 0, 0]).translate([0, straight, 0])
-    return body + tip
+    out = [body, tip]
+    if ribs:
+        out.append(peg_ribs())
+    return union(out)
+
+
+def peg_ribs() -> Manifold:
+    """Round ribs along y around a peg at the origin; each reaches PEG_PRESS past the socket wall."""
+    rr = PEG_RIB_D / 2
+    rc = SOCKET_D / 2 + PEG_PRESS - rr            # rib centre radius
+    full = PEG_L - PEG_RIB_LEAD
+    one = union([Manifold.cylinder(full + 0.5, rr, rr, 24),
+                 Manifold.cylinder(PEG_RIB_LEAD, rr, rr - 0.35, 24).translate([0, 0, full + 0.5])])
+    one = one.rotate([-90, 0, 0]).translate([0, -0.5, 0])
+    ribs = [one.translate([rc * math.cos(a), 0, rc * math.sin(a)])
+            for a in (2 * math.pi * k / PEG_RIBS for k in range(PEG_RIBS))]
+    return Manifold.compose(ribs)
 
 
 # --------------------------------------------------------------------------- #
@@ -325,16 +347,16 @@ def countersunk(x, y, z_top, length):
     return head + cyl_z(M5_HEAD, z_top - 0.01, z_top + 5, x, y) + cyl_z(M5, z_top - length, z_top, x, y)
 
 
-def rack() -> Manifold:
+def rack(peg_ribs_on: bool = True) -> Manifold:
     r = box(-RACK_W / 2, RACK_W / 2, 0, RACK_D, 0, RACK_H)
     pegs = []
     for x, z in pocket_origins():
         r -= box(x - POCKET_W / 2, x + POCKET_W / 2, RACK_BACK, RACK_D + 1, z, z + POCKET_H)
         cx, cz = x, z   # cage stands centred in the pocket, on its floor, touching the back wall
         for fx in FEED_X:
-            r -= cyl_y(RACK_HOLE_D, -1, RACK_BACK + 1, cx + fx, cz + Z_FLOOR + FEED_Z)
+            r -= cyl_y(FEED_D, -1, RACK_BACK + 1, cx + fx, cz + Z_FLOOR + FEED_Z)
         for mx in (-SOCKET_X, SOCKET_X):
-            pegs.append(peg().translate([cx + mx, RACK_BACK, cz + SOCKET_Z]))
+            pegs.append(peg(peg_ribs_on).translate([cx + mx, RACK_BACK, cz + SOCKET_Z]))
         # windows in the walls beside the cage's vents (air)
         for wx in (x - POCKET_W / 2 - RACK_WALL - 1, x + POCKET_W / 2 - 1):
             r -= box(wx, wx + RACK_WALL + 2, RACK_BACK + Y_BEE0 + 1, RACK_BACK + Y_GLASS - 1, cz + Z_FLOOR + 1, cz + Z_ROOF - 1)
@@ -417,8 +439,11 @@ def export_parts(names=None) -> dict[str, trimesh.Trimesh]:
 def assembly():
     """Every printed part in place: stand, rack (with pegs), 4 cages each with foundation and 3 caps (no glass).
     Feeder holes stay open. Returns {name: Manifold} in world coordinates."""
-    parts = {"stand": stand(), "rack": rack()}
     c, g, f, cap = cage(), glass(), foundation(), qc_cap()
+    squash = union([cyl_y(SOCKET_D + 2 * PEG_PRESS + 0.2, RACK_BACK - 0.01, RACK_BACK + SOCKET_T, x + mx, z + SOCKET_Z)
+                    - cyl_y(SOCKET_D, RACK_BACK - 1, RACK_BACK + SOCKET_T + 1, x + mx, z + SOCKET_Z)
+                    for x, z in pocket_origins() for mx in (-SOCKET_X, SOCKET_X)])
+    parts = {"stand": stand(), "rack": rack() - squash}   # rib tips squashed into the socket walls, as when fitted
     for i, (x, z) in enumerate(pocket_origins(), 1):
         at = [x, RACK_BACK, z]
         parts[f"cage{i}"] = c.translate(at)
@@ -471,11 +496,11 @@ def check() -> bool:
     blocked = []
     for i, (x, z) in enumerate(pocket_origins(), 1):
         for fx in FEED_X:
-            probe = cyl_y(FEED_D - 0.6, STAND_Y0 - 5, RACK_BACK + Y_BEE0 + 2, x + fx, z + Z_FLOOR + FEED_Z)
+            probe = cyl_y(FEED_D - 0.05, STAND_Y0 - 5, RACK_BACK + Y_BEE0 + 2, x + fx, z + Z_FLOOR + FEED_Z)
             v = (probe ^ solid).volume()
             if v > TOL:
                 blocked.append(f"cage{i} x={fx:+.0f}: {v:.1f} mm3")
-    report(not blocked, f"12 feeder holes open from behind the rack into the bees (a {FEED_D - 0.6:.1f} mm tube passes)" + ("" if not blocked else ": " + "; ".join(blocked)))
+    report(not blocked, f"12 feeder holes open from behind the rack into the bees (a {FEED_D - 0.05:.2f} mm tube passes straight through rack, cage and foundation)" + ("" if not blocked else ": " + "; ".join(blocked)))
 
     # 4. a queen-cell holder fits in every top hole: not in the glass path, not against the rack ceiling
     c, g, f, holder, r = cage(), glass(), foundation(), qc_holder_dummy(), rack()
@@ -560,19 +585,45 @@ def check() -> bool:
 
     # 6. a cage with 3 holders in place slides straight in and out of every pocket
     loaded = c + holders
+    r0 = rack(peg_ribs_on=False)
     blocked = []
     for i, (x, z) in enumerate(pocket_origins(), 1):
         s = union([loaded.translate([x, RACK_BACK + dy, z]) for dy in np.arange(0, POCKET_D + 4, 2.0)])
-        v = (s ^ r).volume()
+        v = (s ^ r0).volume()
         if v > TOL:
             blocked.append(f"pocket {i}: {v:.1f} mm3")
     report(not blocked, f"a cage with 3 queen cells slides into each pocket ({POCKET_CLR} mm each side, {HEAD_ROOM:.0f} mm over the holders)" + ("" if not blocked else ": " + "; ".join(blocked)))
 
-    # 6b. pegs sit in the cage sockets: centred, with play, and the cage still rests against the rack wall
-    play = (SOCKET_D - PEG_D) / 2
-    report(0 < play <= 0.3 and PEG_L < SOCKET_T,
-           f"rack pegs Ø {PEG_D} x {PEG_L} mm sit in the cage sockets Ø {SOCKET_D} x {SOCKET_T} mm "
-           f"({play:.2f} mm play all round, {SOCKET_T - PEG_L:.1f} mm free at the bottom)")
+    # 6b. the pegs are a press fit in the cage sockets: only the rib tips touch, each PEG_PRESS into the socket wall,
+    #     so the cage can't slide or fall out of its pocket; the cage still rests against the rack's back wall
+    cages_w = union([c.translate([x, RACK_BACK, z]) for x, z in pocket_origins()])
+    v_core = (r0 ^ cages_w).volume()
+    v_ribs = (r ^ cages_w).volume()
+    pk = peg()
+    bb = pk.bounding_box()
+    reach = (bb[3] - bb[0]) / 2                     # a rib points along +x / -x
+    press = reach - SOCKET_D / 2
+    ring_out = union([cyl_y(SOCKET_D + 2 * PEG_PRESS + 0.05, RACK_BACK - 1, RACK_BACK + SOCKET_T + 1, x + mx, z + SOCKET_Z)
+                      for x, z in pocket_origins() for mx in (-SOCKET_X, SOCKET_X)])
+    v_outside = ((r ^ cages_w) - ring_out).volume()
+    report(v_core < TOL and v_ribs > TOL and v_outside < TOL and abs(press - PEG_PRESS) < 0.02 and PEG_L < SOCKET_T,
+           f"rack pegs are a press fit: core Ø {PEG_D} ({(SOCKET_D - PEG_D) / 2:.2f} mm gap), {PEG_RIBS} ribs per peg press "
+           f"{press:.2f} mm into the Ø {SOCKET_D} socket wall; only the ribs touch; {SOCKET_T - PEG_L:.1f} mm free at the "
+           f"bottom so the cage rests on the rack's back wall: the cage can't slide out on its own")
+
+    # 6c. the rack's holes behind the feeders are exactly the cage's: same diameter, same centres
+    rows = []
+    same_r = True
+    for i, (x, z) in enumerate(pocket_origins(), 1):
+        hr = holes_at(r.translate([-x, -RACK_BACK, -z]), -RACK_BACK / 2)
+        for fx in FEED_X:
+            ok_h = fx in hr and fx in hc and abs(hr[fx][0] - hc[fx][0]) < 0.01 and \
+                math.hypot(hr[fx][1] - hc[fx][1], hr[fx][2] - hc[fx][2]) < 0.01
+            same_r &= ok_h
+            if not ok_h:
+                rows.append(f"cage{i} x={fx:+.0f}: " + (f"rack Ø {hr[fx][0]:.2f}" if fx in hr else "no hole"))
+    report(same_r, f"rack holes behind all 12 feeder holes are exactly the cage's: Ø {FEED_D:.1f} mm, same centres"
+           + ("" if same_r else ": " + "; ".join(rows)))
 
     # 7. caps don't stick out more than a holder does
     cap_h = CAP_FLANGE_T
