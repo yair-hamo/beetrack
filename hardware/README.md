@@ -42,9 +42,8 @@ rack and its stand**. The camera and light come later (see the end of this page)
     the ribs squash a little and grip. Tapered rib ends help it start; to take it out, lever it at a feeder hole.
   - Too tight: set `RIB_PRESS` to 0.05–0.1. Still loose: 0.25. Then reprint only the foundation; the cage
     doesn't change.
-  - **Its 3 holes are Ø 11.5 mm, 1 mm wider than the cage's 10.5 mm feeder holes.** Small holes in a thin flat
-    print come out smaller than drawn (the first layer squishes into them), and the cage hole is the one that
-    holds the feeder. So the foundation never narrows the hole, even if the ribs squash unevenly.
+  - **Its 3 holes are exactly the cage's feeder holes: Ø 10.5 mm, same centres.** The ribs keep the sheet
+    centred, so the holes line up; the check measures both from the parts and compares them.
 - **Queen-cell caps** (`qc_cap.stl`): close any queen-cell hole you don't use. 3 per cage. A flat plug that
   sticks out only 1.6 mm; a small groove under one edge of its rim lets you lift it out with a screwdriver tip.
 - **Vents**: 23 horizontal slits per side, 1.8 mm high (bees can't pass), with 1.8 mm bars between them, over
@@ -111,7 +110,7 @@ printed, but the check still tests it), and tests it:
   foundation, into the bees;
 - the queen-cell holders fit their holes, miss the foundation and the glass, the glass slides up and out once they are
   removed, and **with them in place the glass is held down**;
-- the glass fits its grooves; the foundation is a press fit (only its ribs touch the walls, 0.15 mm deep) and goes in and out through the front;
+- the glass fits its grooves; the foundation is a press fit (only its ribs touch the walls, 0.15 mm deep), its feeder holes are exactly the cage's (same diameter, same centres), and it goes in and out through the front;
 - a cage with 3 queen cells slides into every pocket;
 - the stand is stable.
 

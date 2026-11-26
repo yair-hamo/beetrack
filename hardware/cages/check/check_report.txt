@@ -15,7 +15,8 @@ Fit check (python hardware/cages/cages.py check)
 [OK ] glass 104.0 x 97.0 x 2.0 mm sits in the grooves, top flush with the cage (0.5 mm play at each side and the bottom, 1.0 mm in thickness)
 [OK ] foundation is a press fit: sheet 99.7 x 89.7 mm (0.15 mm gap), 14 ribs press 0.15 mm into the left, right, floor, roof; only the ribs touch the cage
 [OK ] foundation slides in/out through the front window; along the way only the rib tips rub the walls
-[OK ] foundation holes Ø 11.5 never narrow the Ø 10.5 cage feeder holes: a 10.45 mm tube passes even with the sheet pushed 0.15 mm to any side
+[OK ] foundation feeder holes are exactly the cage's: Ø 10.5 mm, same centres (x=-30: foundation Ø 10.50 / cage Ø 10.50, centres 0.00 mm apart; x=+0: foundation Ø 10.50 / cage Ø 10.50, centres 0.00 mm apart; x=+30: foundation Ø 10.50 / cage Ø 10.50, centres 0.00 mm apart)
+[OK ] even if the ribs squash unevenly and the sheet sits 0.15 mm off to any side, a 10.15 mm tube passes all 3 holes
 [OK ] a cage with 3 queen cells slides into each pocket (0.5 mm each side, 4 mm over the holders)
 [OK ] rack pegs Ø 10.0 x 2.0 mm sit in the cage sockets Ø 10.3 x 2.2 mm (0.15 mm play all round, 0.2 mm free at the bottom)
 [OK ] caps stick out 1.6 mm (holders 8 mm)
