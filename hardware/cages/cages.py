@@ -75,7 +75,7 @@ QC_GLASS_GAP = 1.0      # hole edge -> glass route
 CAP_STEM_D = 12.6
 CAP_FLANGE_D = 18.0
 CAP_FLANGE_T = 1.6
-CAP_KNOB_D, CAP_KNOB_H = 8.0, 4.0
+CAP_PRY_W, CAP_PRY_D = 4.0, 1.0   # small groove under one edge of the flange: lift the cap with a screwdriver tip
 
 # vents (bees can't pass 1.8 mm)
 VENT_W, VENT_PITCH = 1.8, 3.6   # slit height, slit-to-slit (1.8 mm bars between slits)
@@ -244,8 +244,10 @@ def qc_cap() -> Manifold:
     """Closes an unused queen-cell hole. Sits in the hole at QC_X[0] position."""
     stem = cyl_z(CAP_STEM_D, Z_ROOF, CAGE_H, 0, 0)
     fl = cyl_z(CAP_FLANGE_D, CAGE_H, CAGE_H + CAP_FLANGE_T, 0, 0)
-    knob = cyl_z(CAP_KNOB_D, CAGE_H + CAP_FLANGE_T, CAGE_H + CAP_FLANGE_T + CAP_KNOB_H, 0, 0)
-    return stem + fl + knob
+    cap = stem + fl
+    # pry groove: under the flange, from its rim to the stem
+    cap -= box(CAP_STEM_D / 2, CAP_FLANGE_D / 2 + 1, -CAP_PRY_W / 2, CAP_PRY_W / 2, CAGE_H - 0.01, CAGE_H + CAP_PRY_D)
+    return cap
 
 
 def qc_holder_dummy() -> Manifold:
@@ -343,7 +345,7 @@ PARTS = {
     # name: (builder, print orientation, how many to print, colour, note)
     "cage": (cage, on_back, "4 (+1 spare)", "white", "back wall on the bed, no supports"),
     "foundation": (foundation, flat_front_up, "4 (+1)", "white / natural", "flat, cells up, 0.12 mm layers"),
-    "qc_cap": (qc_cap, lambda m: m, "12", "white", "flange on the bed"),
+    "qc_cap": (qc_cap, lambda m: m.rotate([180, 0, 0]), "12", "white", "flat top on the bed, stem up: no supports"),
     "rack": (rack, on_back, "1", "white or black", "back wall on the bed, no supports"),
     "stand": (stand, lambda m: m, "1", "any", "as modelled (rim up)"),
 }
@@ -482,7 +484,7 @@ def check() -> bool:
     report(not blocked, f"a cage with 3 queen cells slides into each pocket ({POCKET_CLR} mm each side, {HEAD_ROOM:.0f} mm over the holders)" + ("" if not blocked else ": " + "; ".join(blocked)))
 
     # 7. caps don't stick out more than a holder does
-    cap_h = CAP_FLANGE_T + CAP_KNOB_H
+    cap_h = CAP_FLANGE_T
     report(cap_h <= QC_ABOVE, f"caps stick out {cap_h:.1f} mm (holders {QC_ABOVE:.0f} mm)")
 
     # 8. the 4 cages are separate, with a gap between rows for the queen cells

@@ -2,7 +2,7 @@ Fit check (python hardware/cages/cages.py check)
 
 [OK ] cage: one closed solid (1 piece), 110.0 x 100.0 x 27.0 mm fits the P2S bed
 [OK ] foundation: one closed solid (1 piece), 99.4 x 89.4 x 3.0 mm fits the P2S bed
-[OK ] qc_cap: one closed solid (1 piece), 18.0 x 18.0 x 10.6 mm fits the P2S bed
+[OK ] qc_cap: one closed solid (1 piece), 18.0 x 18.0 x 6.6 mm fits the P2S bed
 [OK ] rack: one closed solid (1 piece), 234.0 x 238.0 x 32.5 mm fits the P2S bed
 [OK ] stand: one closed solid (1 piece), 242.6 x 147.5 x 14.0 mm fits the P2S bed
 [OK ] all 38 parts together, no part overlaps another
@@ -15,6 +15,6 @@ Fit check (python hardware/cages/cages.py check)
 [OK ] foundation 99.4 x 89.4 mm slides in/out through the front window
 [OK ] foundation holes line up with the cage feeder holes: a 8.35 mm tube passes even with the sheet pushed 0.3 mm to any side
 [OK ] a cage with 3 queen cells slides into each pocket (0.5 mm each side, 4 mm over the holders)
-[OK ] caps stick out 5.6 mm (holders 8 mm)
+[OK ] caps stick out 1.6 mm (holders 8 mm)
 [OK ] gap above each cage 12 mm, rack wall between cages 4 mm
 [OK ] stand reaches 55 mm behind and 60 mm in front of the rack: tips over only past ~25 degrees

@@ -35,7 +35,8 @@ rack and its stand**. The camera and light come later (see the end of this page)
   goes in and out through the front when the glass is off. Its 3 holes line up with the feeder holes, so
   feeder tubes go through it. It has 0.3 mm of play on each side; a tube still passes even when the sheet is
   pushed to one side. The sheet is whole: the queen cells hang just in front of it.
-- **Queen-cell caps** (`qc_cap.stl`): close any queen-cell hole you don't use. 3 per cage.
+- **Queen-cell caps** (`qc_cap.stl`): close any queen-cell hole you don't use. 3 per cage. A flat plug that
+  sticks out only 1.6 mm; a small groove under one edge of its rim lets you lift it out with a screwdriver tip.
 - **Vents**: 23 horizontal slits per side, 1.8 mm high (bees can't pass), with 1.8 mm bars between them, over
   the whole height of both side walls. The rack walls beside them are open too.
 - **2 magnets** (10 × 2 mm) in the back of the cage hold it against the rack.
@@ -110,7 +111,7 @@ check again; it ends with `ALL CHECKS PASSED` or names what doesn't fit.
 |---|---|---|---|
 | `cage` | 4 (+1 spare) | white | back wall on the bed (as exported); 0.2 mm layers, 4 walls, 20 % infill; no supports |
 | `foundation` | 4 (+1) | white or natural | flat, cells up (as exported); 0.12 mm layers so the cell walls come out clean |
-| `qc_cap` | 12 | white | flange on the bed |
+| `qc_cap` | 12 | white | flat top on the bed, stem up (as exported); no supports |
 | `rack` | 1 | white or black | back wall on the bed (as exported); 4 walls, 15 % gyroid; no supports |
 | `stand` | 1 | any | as exported (rim up) |
 
