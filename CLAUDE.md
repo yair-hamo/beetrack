@@ -18,7 +18,7 @@ beetrack/                     ← repository root (github.com/yair-hamo/beetrack
 ├── LICENSE                   MIT
 ├── pyproject.toml            package metadata; version
 ├── config/default.yaml       all analysis parameters (regenerate: beetrack config-dump -o config/default.yaml)
-├── hardware/                 the 4-plate recording rig: README (design), SHOPPING_LIST, cad/playground.py → cad/stl/
+├── hardware/                 bee cages + rack + stand: README, SHOPPING_LIST, cages/cages.py → cages/stl/ + cages/check/ (fit check)
 ├── docs/                     HARDWARE (older webcam plan) · ARCHITECTURE · PIPELINE ·
 │   │                         DATA_FORMATS · API · VALIDATION · SLEAP
 │   └── assets/               README GIFs (annotated, paths, heatmap) + concept drawing
@@ -249,13 +249,17 @@ occasionally hits a render timeout when the machine is busy; re-run before assum
   browser pop-up unreliable. A full native-UI rewrite (Qt) was considered and rejected: same result for
   users, months of work, loses the tested web UI. Head-direction work (PR #4) was dropped by the user for now
   (not accurate enough on real footage); its branch `feat/head-direction` is kept on GitHub.
-- Rig plan (2026-11-26, `hardware/`): one Hikrobot MV-CS050-10UC (colour, 5 MP, USB3) + 12 mm lens films **4
-  standing plates** (10 bees each, queen cell hanging, feeders through the back wall) at ≈ 8 px/mm, constant
-  CRI ≥ 90 LED light with cross-polarisation, in a 340 × 340 × 600 mm box in the bees' climate room. The user
-  chose colour paint (neon) over B/W tags and constant light (no IR night mode for now). Parts are generated
-  by `hardware/cad/playground.py` (manifold3d + trimesh, not project dependencies). **Next software work**:
-  GenICam recorder with live crop into one video per plate (10-min pieces), near-live analysis per piece and a
-  live dashboard, then a final whole-run pass.
+- Rig plan (2026-11-26, `hardware/`): one Hikrobot MV-CS050-10UC (colour, 5 MP, USB3) + 12 mm lens to film **4
+  standing cages** at ≈ 8 px/mm under constant CRI ≥ 90 light with cross-polarisation, in the bees' climate
+  room. The user chose colour paint (neon) over B/W tags and constant light (no IR night mode for now).
+  Cage redesign (same day): white cages 110 × 99 × 30.4 mm (bees 100 × 90 × 20 mm), 3 × Ø 9 feeder holes low in
+  the back, 3 × Ø 13 queen-cell holes in the top (holder disc ≈ 22 mm sticks out 8 mm, so cages are separate
+  pockets with head room), printed comb foundation with matching holes, caps for unused queen holes, a 2 × 2
+  rack and a stand (table or 2020 rail). Camera/light/box parts were removed for now. Parts and the fit check
+  come from `hardware/cages/cages.py` (manifold3d + trimesh + scipy + matplotlib, not project dependencies);
+  `check` must end with ALL CHECKS PASSED. **Next software work** (after the camera stage): GenICam recorder
+  with live crop into one video per cage (10-min pieces), near-live analysis per piece and a live dashboard,
+  then a final whole-run pass.
 
 **Docs not yet updated for v0.3** (small, do it in a `docs/` PR): `docs/PIPELINE.md` §4c (probabilities,
 `id_source`, `silence_s`, `never_read`) and the mark-position section; `docs/DATA_FORMATS.md` (new columns

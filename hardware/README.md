@@ -1,147 +1,120 @@
-# The playground: recording rig for 4 plates
+# Bee cages and rack
 
-A closed, light-tight box that films **4 plates at once**, each with **exactly 10 marked workers and a queen
-cell**, for up to 48 hours, in colour, under constant light. One industrial camera; the software crops the 4
-plates live and analyses them while the experiment runs.
+Four white cages, each holding **exactly 10 marked workers** and up to **3 queen cells**, standing in one rack
+so a single camera can film all four at once. This folder covers what is being built now: **the cages, the
+rack and its stand**. The camera and light come later (see the end of this page).
 
-- **What to buy:** [SHOPPING_LIST.md](SHOPPING_LIST.md) (pilot ≈ ₪2,700–4,000).
-- **What to print:** [`cad/stl/`](cad/stl/), made by [`cad/playground.py`](cad/playground.py) (parametric:
-  measure your glass, tubes and camera, change the numbers, run it again).
-- This replaces the older webcam plan in [`docs/HARDWARE.md`](../docs/HARDWARE.md).
+- **What to print:** [`cages/stl/`](cages/stl/), made by [`cages/cages.py`](cages/cages.py).
+- **Fit check:** [`cages/check/`](cages/check/): every part assembled together and tested (see below).
+- **What to buy:** [SHOPPING_LIST.md](SHOPPING_LIST.md).
 
-```
-SIDE VIEW (box lying on the shelf, camera looking horizontally at the standing plates)
+![Fit check: front view, side section, horizontal section](cages/check/assembly.png)
 
- back panel           rack + 4 plates          light panel            camera
- (feeder access)      (glass faces camera)     (diffuser + LEDs)      (12 mm lens)
-   ║                       │▌                        ║ ║                  ┌──┐
-   ║   tubes ──────────►   │▌ glass                  ║ ║ ◄─ lens looks ── │▓▓│◄── USB3 to PC
-   ║                       │▌                        ║ ║    through hole  └──┘
-   ║◄─45─►│◄─ 26 ─►│◄────────────── ≈ 42 cm ──────────────►│
-   0 mm                  ≈ 73 mm                     ≈ 495 mm          ≈ 560 mm      600 mm
-```
+## One cage
 
-## Why the plates stand up
-
-It matches the current setup: the **queen cell hangs down from the top**, as in a hive, and food and water come
-in through the **back wall**, far from the camera, so tubes never block the view. The glass is the face
-toward the camera and slides out upward. As now, a bee walking on the glass shows its belly; marking both
-sides of each bee (already planned) keeps those bees identifiable.
-
-## Is 5 MP enough? Yes, at about 8 px/mm
-
-The 4 plates (228 × 228 mm with the rack) fill the camera's 2048-pixel height, so a **2–3 mm paint dot is about
-16–24 pixels across**: three times the old 452-pixel video and more than our analysis needs.
-
-The Samsung A57 videos failed for reasons a phone can't avoid, not resolution:
-
-| Phone video | This rig |
+| | Size |
 |---|---|
-| Auto white balance and exposure keep changing the colours | **Locked** exposure, gain and white balance for the whole run |
-| Heavy video compression smears small coloured dots | Light compression (CRF 18), straight from the sensor |
-| Noise reduction and sharpening invent and erase detail | No phone image processing |
-| Room light: uneven, low colour quality, often flickering | Constant LED light, **CRI ≥ 90**, diffused, no flicker |
-| Reflections from the dish | Cross-polarised light removes reflections |
-| Hand-held or loosely placed | Fixed distance and position every run |
+| Outside | **110 × 99 × 30.4 mm** (width × height × depth) |
+| Room for the bees | 100 × 90 mm, **20 mm deep** (from the comb foundation to the glass) |
+| Glass to order | **104 × 99 × 2 mm**, 4 + spares |
 
-If the pilot shows you want more detail (for example for leg/antenna tracking), film fewer plates per camera
-rather than buying a bigger sensor: higher-resolution models need larger, more expensive lenses.
+- **White PETG body**, printed back-wall-down, no supports.
+- **3 feeder holes, Ø 9 mm**, in the back wall, low (centres 10 mm above the floor, at −30 / 0 / +30 mm):
+  candy, water, pollen. They stay open.
+- **3 queen-cell holes, Ø 13 mm**, in the top wall, above the same three positions. The queen-cell
+  holder (the blue cup with a disc and a small peg) drops in from above; its disc rests on the top and sticks
+  out about 8 mm.
+- **Glass cover** slides down through a slot in the top wall into grooves in both side walls and the bottom
+  wall. It sticks out 3 mm above the top to grab it, and a finger notch in the front edge helps push it up.
+  It comes out **with the queen cells in place**: the holes sit just far enough back that the holders' discs
+  don't cover the glass slot.
+- **Comb foundation** (`foundation.stl`, printed separately): a 99.4 × 89.4 × 1.8 mm sheet with worker-sized
+  hexagonal cells (5.4 mm). It lies against the inside of the back wall and goes in and out through the front
+  when the glass is off. Its 3 holes line up with the feeder holes, so feeder tubes go through it. It has
+  0.3 mm of play on each side; a tube still passes even when the sheet is pushed to one side.
+- **Queen-cell caps** (`qc_cap.stl`): close any queen-cell hole you don't use. 3 per cage.
+- **Vents**: horizontal slits, 1.8 mm high (bees can't pass), in both side walls.
+- **2 magnets** (10 × 2 mm) in the back of the cage hold it against the rack.
 
-## Where to put it
+### Why the queen cells hang 2 mm from the comb
 
-In the **climate room** (constant temperature and humidity), so the plates live in the bees' conditions:
+The holder's disc is about **22 mm** wide and the bee room is only 20 mm deep. The disc has to stay behind
+the glass slot, or the glass can't come out. So the holes sit 8.5 mm in front of the foundation: the
+cups hang about 2 mm from the comb and 5 mm from the glass, a bit like a queen cell on a real comb.
 
-- **On a sturdy shelf or lab bench at waist height**, footprint about 40 × 65 cm. Not on top of a cupboard
-  (heat collects there; awkward to reach) and not on the floor.
-- **Away from vibration**: not on the same shelf as a fridge, incubator or anything with a compressor or fan.
-- **Out of the room's air stream**: not under or in front of the air-conditioning outlet.
-- **PC next to the box** on a separate shelf (USB cable ≤ 3 m), or a laptop. The PC adds some heat to the
-  room; the logger (F2) in the room shows whether the climate control keeps up. If the PC must be outside the
-  room later, switch to the GigE version of the camera (Ethernet cable through the wall).
-- One temperature/humidity logger **inside the box next to the plates**: the LEDs warm the box a little.
-  It should read within ~0.5 °C of the room. If not, add the vent holes below or a small 24 V fan.
+**Measure your holder's disc.** If it's smaller, the holes move forward automatically: change `QC_FLANGE_D`
+in `cages.py` and run it again. If it's bigger than about 25 mm it no longer fits with 20 mm of bee room;
+the check will fail and say so.
 
-## The box
+## The rack and the stand
 
-A 2020 aluminium frame, **340 × 340 mm outside, 600 mm deep**, closed with matte black PVC panels:
+- **Rack** (`rack.stl`, 234 × 236 × 36 mm): 2 × 2 **separate pockets**, each with a floor, a wall on each side,
+  a back wall and **12 mm of space above the cage** for the queen-cell holders (4 mm to spare). A cage with its
+  queen cells in place slides straight in from the front and is held by 2 magnets at the back.
+  - Ø 14 mm holes in the back wall line up with every cage's feeder holes, so **feeders are pushed in and
+    refilled from behind**, without touching the cage.
+  - Windows in the walls beside each cage's vents let air through.
+  - The fronts of the cages are flush with the front of the rack, all 4 glasses in one plane.
+- **Stand** (`stand.stl`, 243 × 151 mm): the rack drops into a rim and is fixed with **2 countersunk
+  M5 × 12 screws** down through the floors of the lower pockets. Their heads sit flush, so the cages slide over
+  them. The nuts go into hexagonal pockets under the stand.
+  - **On a table:** the stand reaches 55 mm behind and 60 mm in front of the rack, so it won't tip unless
+    tilted past about 25°. Four shallow recesses underneath take 10 mm stick-on rubber feet.
+  - **On a rail (for the camera, later):** underneath is a groove that fits a **2020 aluminium profile**
+    running towards the camera, with **2 M5 holes for T-nuts**. Bolt the stand and the camera to the same
+    profile, and the camera distance is fixed and repeatable. Reference: the front face of the glass is
+    **36.8 mm behind the stand's front M5 hole**, so measure the camera distance from that hole.
 
-| Part | What | Notes |
-|---|---|---|
-| Frame | 4 × 600 mm (depth) + 8 × 300 mm profiles, 24 corner brackets | Square and stiff: the camera distance must never change |
-| Back panel | 6 mm, black | Rack bolted on with 4 × M5; **8 holes Ø 14 mm behind the tube ports**, so feeders and water are refilled **from outside without opening the box** |
-| Side door | One side panel, lift-off, held by magnets | To take plates in and out |
-| Rack | Printed, bolted to the back panel, centred | 4 pockets with magnets: every plate sits in exactly the same place, every run |
-| Camera bar | 1 × 300 mm profile across the front, at the rack's centre height (T-nuts: adjustable) | Camera mount slides on it to centre left/right |
-| Light | LED board + diffuser panel, both on printed clips, just in front of the camera | See below |
-| Vents | A row of Ø 8 mm holes in the top and bottom panels, near the back | Air exchange with the room |
+Order of work with a cage: put in the foundation, then the queen cells (from above), then the glass, then
+the bees; slide the cage into its pocket; push the feeders in from behind. To take the glass out, slide the
+cage out of the rack first.
 
-### Light: constant, even, without reflections
+## The fit check
 
-- **COB LED strip** (CRI ≥ 90, 4000 K, 24 V), about 1.2 m in 4 rows, stuck on the black **LED board**
-  (300 × 300 mm, Ø 60 mm hole for the lens), facing the plates.
-- **Opal acrylic diffuser** 40 mm in front of the LED board (same size, same hole): one big, even,
-  shadow-free light source around the lens.
-- **Cross-polarisation**: a sheet of polariser film on the diffuser, and a film disc in the printed
-  `pol_ring` in the diffuser hole, in front of the lens. Turn the ring until the glass reflections vanish
-  (about 90° to the panel's film), then fix it. This removes glare from all 4 glasses, and shine on the bees.
-- **Constant**: full power from the 24 V adapter, no dimmer, the same in every run. Measure the light at the
-  plates once with the lux meter (F3) and write it in the methods.
+```bash
+pip install manifold3d trimesh numpy scipy matplotlib
+python hardware/cages/cages.py check
+```
 
-## The plate
+This writes every STL, builds the **whole assembly** (stand, rack, 4 cages, each with its glass, foundation,
+3 caps and magnets; only the feeder holes left open), and tests it:
 
-`plate.stl` + `background_insert.stl` + a 2 mm glass, outside **110 × 110 × 25.6 mm**, arena **100 × 100 mm,
-15 mm deep** (back to glass).
+- every part is a closed solid and fits the P2S bed (256 × 256 × 256 mm);
+- **no two of the 42 parts overlap**;
+- all 12 feeder holes are open in a straight line from behind the rack, through the rack, the cage and the
+  foundation, into the bees;
+- the queen-cell holders fit their holes, miss the foundation and the glass, and **the glass slides out with
+  all 3 in place**;
+- the glass fits its grooves; the foundation goes in and out through the front;
+- a cage with 3 queen cells slides into every pocket;
+- the stand is stable.
 
-- **Black body**, printed back-wall-down. Ventilation slots (1.8 mm, bees can't pass) in both side walls.
-- **White background insert** (removable, washable): light background = dark bees with bright dots stand out.
-  A sheet of beeswax foundation cut to 99 × 99 mm can replace it, like the current setup.
-- **Queen-cell ledge** near the top of the insert: fix the queen cell under it with a little wax, hanging down.
-- **Glass** (104 × 107 × 2 mm) slides down into grooves in the side and bottom walls; a finger notch at
-  the top to pull it out.
-- **Two ports Ø 11 mm** in the back wall, low: feeder and water tubes from behind (1.5 mL microtube or
-  cut 5 mL syringe; check the fit and change `PORT_D`). `port_plug.stl` closes an unused port.
-- **Two magnets** (10 × 2 mm) in the back hold the plate in its rack pocket; a notch on the top edge shows
-  which way is up.
+Results: [`check/check_report.txt`](cages/check/check_report.txt), the picture above, and the whole assembly as
+[`check/assembly.stl`](cages/check/assembly.stl) (opens in GitHub's 3D viewer and in Bambu Studio) and
+[`check/assembly.glb`](cages/check/assembly.glb) (in colour). If you change any number in `cages.py`, run the
+check again; it ends with `ALL CHECKS PASSED` or names what doesn't fit.
 
-### Printing (Bambu Lab P2S, PETG)
+## Printing (Bambu Lab P2S, PETG)
 
-| Part | Qty | Colour | Orientation / settings |
+| Part | Qty | Colour | How |
 |---|---|---|---|
-| `plate` | 4 (+1 spare) | black | back wall on the bed; 0.2 mm layers, 4 walls, 25 % infill; no supports |
-| `background_insert` | 4 (+1) | white | flat; 0.16 mm layers for a smooth face |
-| `rack` | 1 | black | as modelled (skirt on the bed, pockets up); 4 walls, 15 % gyroid; ≈ 11 h |
-| `camera_mount` | 1 | black | mounting plate on the bed |
-| `pol_ring`, `pol_retainer` | 1 each | black | flat |
-| `panel_clip` | 8 | black | shelf on the bed |
-| `port_plug` | 4 | black | flange on the bed |
+| `cage` | 4 (+1 spare) | white | back wall on the bed (as exported); 0.2 mm layers, 4 walls, 20 % infill; no supports |
+| `foundation` | 4 (+1) | white or natural | flat, cells up (as exported); 0.12 mm layers so the cell walls come out clean |
+| `qc_cap` | 12 | white | flange on the bed |
+| `rack` | 1 | white or black | back wall on the bed (as exported); 4 walls, 15 % gyroid; no supports |
+| `stand` | 1 | any | as exported (rim up) |
 
-Glue the magnets with a drop of superglue; **check the polarity** so plate and rack attract.
+PETG, not PLA: PLA softens in a warm bee room. Glue the magnets with a drop of superglue and **check the
+polarity** so cage and rack attract.
 
-## Software: live crops and live analysis (to build next)
+**Test before printing all of them:** print one cage, one foundation and one cap. Check the glass slides
+freely, the holder and the feeder tubes fit their holes, and the cap is snug. Then measure and correct
+`GLASS_T`, `QC_FLANGE_D`, `FEED_D` or `CAP_STEM_D` in `cages.py` if needed, and run the check again.
 
-What the PC will do during a run:
+## Later: camera and light (not being built now)
 
-1. **Record**: talks to the camera directly (Hikrobot MVS / GenICam), locks exposure, gain and white balance,
-   15 fps, and writes a timestamp for every frame.
-2. **Crop live into 4 videos**: the 4 plate rectangles are drawn once per rig on a live preview (the rack
-   keeps them fixed). Each plate is saved as its own video in 10-minute pieces, plus a small overview video of
-   the whole view for checking.
-3. **Analyse live**: as soon as a 10-minute piece of a plate is finished, beetrack analyses it, so a run's
-   dashboard updates every ~10 minutes: who visited the queen cell and for how long, paths, heat map, an
-   annotated frame, and warnings (a bee not seen for a while, a mark not read, temperature drift).
-4. **Final pass** at the end: one analysis over the whole run per plate, with identity across all pieces,
-   giving the same results files as today (CSV / Parquet, videos).
-
-This needs new code in beetrack (camera recorder, multi-plate cropping, a live dashboard). It will be done as
-separate pull requests after the pilot box is built.
-
-## Pilot checklist
-
-1. Print one plate + insert; test the glass slide and the tube ports with the real glass and tubes.
-2. Build the box; set the camera ~42 cm from the glass; focus the lens at f/4–5.6 on the plate surface;
-   **lock focus and iris**.
-3. Lock camera settings: exposure ≤ 8 ms, gain low, white balance once on the colour checker.
-4. Turn the polariser ring until reflections are gone.
-5. One plate with 10 marked bees, 2 hours: do all 10 colours separate in beetrack's "Find the marks"?
-   Glare? Fog on the glass? Temperature in the box vs the room?
-6. Then 4 plates for 48 hours.
+The plan stays as before: one colour industrial camera (Hikrobot MV-CS050-10UC, 5 MP) with a 12 mm lens about
+42 cm in front of the glass. That gives about 8 px/mm, so a 2–3 mm paint dot is 16–24 pixels wide. Add
+constant LED light (CRI ≥ 90) with cross-polarisation against glass reflections, and software that crops the
+4 cages live into 4 videos and analyses them while the run goes on. The camera will mount on the same 2020
+profile as the stand. The camera and light parts will be designed when that stage starts.

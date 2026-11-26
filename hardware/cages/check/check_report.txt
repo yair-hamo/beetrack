@@ -1,0 +1,19 @@
+Fit check (python hardware/cages/cages.py check)
+
+[OK ] cage: closed solid, 110.0 x 99.0 x 30.4 mm fits the P2S bed
+[OK ] foundation: closed solid, 99.4 x 89.4 x 1.8 mm fits the P2S bed
+[OK ] qc_cap: closed solid, 18.0 x 18.0 x 9.6 mm fits the P2S bed
+[OK ] rack: closed solid, 234.0 x 236.0 x 35.9 mm fits the P2S bed
+[OK ] stand: closed solid, 242.6 x 150.9 x 14.0 mm fits the P2S bed
+[OK ] all 42 parts together, no part overlaps another
+[OK ] 12 feeder holes open from behind the rack into the bees (a 8.4 mm tube passes)
+[OK ] 3 queen-cell holders (flange 22 mm, 8 mm above the top) sit in the top holes without hitting the cage
+[OK ] queen-cell holes 8.5 mm from the foundation: cells hang 2.0 mm from the comb and 5.0 mm from the glass
+[OK ] glass pulls out upwards with all 3 queen cells in place (flange edge -0.5 mm from the glass slot; must be < 0)
+[OK ] glass 104 x 99 x 2.0 mm sits in the grooves (0.5 mm play each side, 0.6 mm in thickness)
+[OK ] foundation 99.4 x 89.4 mm slides in/out through the front window
+[OK ] foundation holes line up with the cage feeder holes: a 8.35 mm tube passes even with the sheet pushed 0.3 mm to any side
+[OK ] a cage with 3 queen cells slides into each pocket (0.5 mm each side, 4 mm over the holders)
+[OK ] caps stick out 5.6 mm (holders 8 mm)
+[OK ] gap above each cage 12 mm, rack wall between cages 4 mm
+[OK ] stand reaches 55 mm behind and 60 mm in front of the rack: tips over only past ~25 degrees
