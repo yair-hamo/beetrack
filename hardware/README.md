@@ -39,7 +39,8 @@ rack and its stand**. The camera and light come later (see the end of this page)
   sticks out only 1.6 mm; a small groove under one edge of its rim lets you lift it out with a screwdriver tip.
 - **Vents**: 23 horizontal slits per side, 1.8 mm high (bees can't pass), with 1.8 mm bars between them, over
   the whole height of both side walls. The rack walls beside them are open too.
-- **2 magnets** (10 × 2 mm) in the back of the cage hold it against the rack.
+- **2 round sockets** (Ø 10.3 × 2.2 mm) in the back of the cage, at the upper corners: the rack's pegs go
+  in them, so every cage sits in exactly the same place.
 
 ### How shallow it can be: the queen cells decide
 
@@ -59,7 +60,10 @@ The cage is made **as shallow as the queen-cell holders allow**, so bees can't t
 
 - **Rack** (`rack.stl`, 234 × 238 × 32.5 mm): 2 × 2 **separate pockets**, each with a floor, a wall on each side,
   a back wall and **12 mm of space above the cage** for the queen-cell holders (4 mm to spare). A cage with its
-  queen cells in place slides straight in from the front and is held by 2 magnets at the back.
+  queen cells in place slides straight in from the front; at the back, **2 pegs** (Ø 10 × 2 mm, bevelled tip)
+  go into the cage's sockets and lock it in position left/right and up/down. The cage sits on the pocket floor
+  between the pocket walls; nothing to glue. If the pegs feel loose, set `PEG_D` to 10.1 or 10.2 and reprint
+  the rack (the cages don't change).
   - Ø 14 mm holes in the back wall line up with every cage's feeder holes, so **feeders are pushed in and
     refilled from behind**, without touching the cage.
   - Windows in the walls beside each cage's vents, over their whole height, let air through.
@@ -87,11 +91,11 @@ python hardware/cages/cages.py check
 ```
 
 This writes every STL, builds the **whole assembly** of printed parts (stand, rack, 4 cages, each with its
-foundation, 3 caps and magnets; only the feeder holes left open; the glass is left out because it isn't
+foundation and 3 caps, the rack's pegs in the cage sockets; only the feeder holes left open; the glass is left out because it isn't
 printed, but the check still tests it), and tests it:
 
 - every part is one closed solid (nothing loose or floating) and fits the P2S bed (256 × 256 × 256 mm);
-- **no two of the 38 parts overlap**;
+- **no two of the 22 parts overlap**, and the rack's pegs fit the cage sockets;
 - all 12 feeder holes are open in a straight line from behind the rack, through the rack, the cage and the
   foundation, into the bees;
 - the queen-cell holders fit their holes, miss the foundation and the glass, and **the glass slides out sideways with
@@ -115,8 +119,8 @@ check again; it ends with `ALL CHECKS PASSED` or names what doesn't fit.
 | `rack` | 1 | white or black | back wall on the bed (as exported); 4 walls, 15 % gyroid; no supports |
 | `stand` | 1 | any | as exported (rim up) |
 
-PETG, not PLA: PLA softens in a warm bee room. Glue the magnets with a drop of superglue and **check the
-polarity** so cage and rack attract.
+PETG, not PLA: PLA softens in a warm bee room. The rack prints on its back, so the pegs point straight up:
+no supports.
 
 **Test before printing all of them:** print one cage, one foundation and one cap. Check the glass slides
 freely, the holder and the feeder tubes fit their holes, and the cap is snug. Then measure and correct

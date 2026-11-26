@@ -17,14 +17,13 @@ Prices are rough (November 2026), in shekels, and should be checked when orderin
 |---|---|---|---|---|---|
 | N1 | **PETG filament, white** | 2 kg | PETG, not PLA (PLA softens in a warm bee room). All parts together use about 1 kg; the rest is for test prints and spares. | [Bambu PETG HF](https://bambulab.com/en/filament/petg-hf) | 200–300 |
 | N2 | **Glass, 2 mm, cut to 106.5 × 94.0 mm**, edges ground ("seamed") | 8 (4 + spares) | Clear float glass, from a local glazier. **Order after printing one test cage**, and measure the real thickness: if it isn't 2.0 mm, change `GLASS_T` and reprint. Perspex: only *cast* acrylic (see README). | Local glazier | 40–120 |
-| N3 | Neodymium magnet discs **10 × 2 mm** | 20 (16 + spares) | N35 or stronger. 2 in each cage, 2 in each rack pocket. | [Search](https://www.aliexpress.com/w/wholesale-neodymium-magnet-10x2mm.html) | 15–30 |
-| N4 | **M5 × 12 countersunk screws** + **M5 hex nuts** | 2 + 2 (a small pack) | Countersunk (flat head, 90°), to fix the rack to the stand. | [Search](https://www.aliexpress.com/w/wholesale-M5-countersunk-screw-kit-nuts.html) | 10–20 |
-| N5 | Stick-on **rubber feet, Ø 10 mm** | 4 | So the stand doesn't slide on the table. | [Search](https://www.aliexpress.com/w/wholesale-rubber-feet-10mm-self-adhesive.html) | 5–15 |
-| N6 | Optional: **2020 aluminium profile**, about 60 cm, + 2 M5 drop-in T-nuts and M5 × 10 screws | 1 | Only to fix the stand (and later the camera) on one rail at a fixed distance. 20 × 20 mm, 6 mm slot. | [Search](https://www.aliexpress.com/w/wholesale-2020-aluminum-profile-cut-to-length.html) | 30–60 |
-| N7 | Feeders: 1.5 mL microtubes, cut syringes, cotton dental rolls | — | Lab stock. They must fit the **Ø 9 mm** holes; if your tubes need a different hole, change `FEED_D` in `cages.py`. | Lab stock | — |
-| N8 | Queen-cell holders (the blue cups) | 12 | You have these. Measure the **disc diameter** and the tube diameter before printing (`QC_FLANGE_D`, `QC_D`). | Lab stock | — |
-| N9 | **Posca PC-1M** (fine tip) paint markers: **fluorescent set** + standard colours | 1 set each | For marking the bees. Water-based opaque paint; fine tip for 2–3 mm dots. | [Search (Amazon)](https://www.amazon.com/s?k=posca+pc-1m+fluorescent) | 60–150 |
-| N10 | Queen-marking tube with plunger (holds a worker while you paint) | 2 | Soft mesh or sponge plunger. | [Search](https://www.aliexpress.com/w/wholesale-queen-bee-marking-tube-plunger.html) | 15–30 |
+| N3 | **M5 × 12 countersunk screws** + **M5 hex nuts** | 2 + 2 (a small pack) | Countersunk (flat head, 90°), to fix the rack to the stand. | [Search](https://www.aliexpress.com/w/wholesale-M5-countersunk-screw-kit-nuts.html) | 10–20 |
+| N4 | Stick-on **rubber feet, Ø 10 mm** | 4 | So the stand doesn't slide on the table. | [Search](https://www.aliexpress.com/w/wholesale-rubber-feet-10mm-self-adhesive.html) | 5–15 |
+| N5 | Optional: **2020 aluminium profile**, about 60 cm, + 2 M5 drop-in T-nuts and M5 × 10 screws | 1 | Only to fix the stand (and later the camera) on one rail at a fixed distance. 20 × 20 mm, 6 mm slot. | [Search](https://www.aliexpress.com/w/wholesale-2020-aluminum-profile-cut-to-length.html) | 30–60 |
+| N6 | Feeders: 1.5 mL microtubes, cut syringes, cotton dental rolls | — | Lab stock. They must fit the **Ø 9 mm** holes; if your tubes need a different hole, change `FEED_D` in `cages.py`. | Lab stock | — |
+| N7 | Queen-cell holders (the blue cups) | 12 | You have these. Measure the **disc diameter** and the tube diameter before printing (`QC_FLANGE_D`, `QC_D`). | Lab stock | — |
+| N8 | **Posca PC-1M** (fine tip) paint markers: **fluorescent set** + standard colours | 1 set each | For marking the bees. Water-based opaque paint; fine tip for 2–3 mm dots. | [Search (Amazon)](https://www.amazon.com/s?k=posca+pc-1m+fluorescent) | 60–150 |
+| N9 | Queen-marking tube with plunger (holds a worker while you paint) | 2 | Soft mesh or sponge plunger. | [Search](https://www.aliexpress.com/w/wholesale-queen-bee-marking-tube-plunger.html) | 15–30 |
 
 ## Before you order the glass
 
@@ -64,7 +63,7 @@ No dimmer: the light runs at full, constant power so it is identical in every ru
 | C3 | M5 drop-in T-nuts + M5 × 8 and M5 × 10 screws | 50 + 50 | For 2020 / 6 mm slot. | [Search](https://www.aliexpress.com/w/wholesale-2020-M5-T-nut-screw-kit.html) | 30–50 |
 | C4 | **Black PVC foam board (Forex) 3 mm**: 4 × 600 × 340 mm (sides, top, bottom) + 1 × 340 × 340 mm (front) + LED board 300 × 300 mm with Ø 60 mm hole | 6 pcs | Matte black. A local sign/plastics shop cuts it to size. | Local sign shop | 100–200 |
 | C5 | **Back panel**: black PVC or plywood **6 mm**, 340 × 340 mm | 1 | Holes to be set when the box is redesigned around the new rack. | Local / cut yourself | 30–60 |
-| C6 | Neodymium magnet discs **10 × 2 mm** (plates ↔ rack) and **10 × 3 mm** (side door) | 30 + 10 | N35 or stronger. | [Search](https://www.aliexpress.com/w/wholesale-neodymium-magnet-10x2mm.html) | 20–40 |
+| C6 | Neodymium magnet discs **10 × 3 mm** (side door) | 10 | N35 or stronger. | [Search](https://www.aliexpress.com/w/wholesale-neodymium-magnet-10x2mm.html) | 20–40 |
 
 ## F. Calibration and monitoring
 

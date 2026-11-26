@@ -13,7 +13,7 @@ What one cage needs (print / buy):
     foundation.stl    1   white/natural the comb foundation sheet that lies against the inside of the back wall
     qc_cap.stl        3   white PETG   caps that close the queen-cell holes that are not used
     glass             1   2 mm glass, 106.5 x 94 mm (see GLASS_W / GLASS_L below), slides in from the right
-And for the rack of 4 cages: rack.stl (1), stand.stl (1), 8 magnets 10 x 2 mm, 2 x M5x12 countersunk + nuts.
+And for the rack of 4 cages: rack.stl (1), stand.stl (1), 2 x M5x12 countersunk + nuts.
 
 World coordinates (used for the assembly): x = left -> right, y = back -> front (towards the camera),
 z = up. The cage stands up: the glass is its front face, the queen cells hang from the top wall, the
@@ -80,9 +80,12 @@ CAP_PRY_W, CAP_PRY_D = 4.0, 1.0   # small groove under one edge of the flange: l
 # vents (bees can't pass 1.8 mm)
 VENT_W, VENT_PITCH = 1.8, 3.6   # slit height, slit-to-slit (1.8 mm bars between slits)
 
-# magnets: 2 in the back of each cage, 2 in the rack behind each cage
-MAGNET_D, MAGNET_T = 10.0, 2.0
-MAGNET_X, MAGNET_Z = 38.0, 80.0   # from the cage centre / from the cage bottom
+# locating sockets in the back of each cage (2 per cage, Ø 10.3 x 2.2 mm) and the matching pegs on the rack
+SOCKET_D, SOCKET_T = 10.3, 2.2    # the sockets in the cage (first made for 10 x 2 mm magnets)
+SOCKET_X, SOCKET_Z = 38.0, 80.0   # from the cage centre / from the cage bottom
+PEG_D = 10.0                      # peg on the rack: 0.15 mm play all round in the socket (10.1-10.2 = tighter)
+PEG_L = 2.0                       # 0.2 mm shorter than the socket is deep, so the cage still touches the rack
+PEG_CHAMFER = 0.6                 # bevelled tip, guides the cage onto the pegs
 
 # rack: 2 x 2 pockets, each with a floor, walls on both sides, a back wall and room above for the queen cells
 RACK_WALL = 4.0
@@ -201,9 +204,9 @@ def cage() -> Manifold:
         body -= box(-hw - 1, -IN_W / 2 + 0.01, vy0, vy1, z, z + VENT_W)
         body -= box(IN_W / 2 - 0.01, hw + 1, vy0, vy1, z, z + VENT_W)
         z += VENT_PITCH
-    # magnets in the outside of the back wall
-    for x in (-MAGNET_X, MAGNET_X):
-        body -= cyl_y(MAGNET_D + 0.3, -1, MAGNET_T + 0.2, x, MAGNET_Z)
+    # 2 locating sockets in the outside of the back wall (the rack's pegs go in)
+    for x in (-SOCKET_X, SOCKET_X):
+        body -= cyl_y(SOCKET_D, -1, SOCKET_T, x, SOCKET_Z)
     return body
 
 
@@ -258,8 +261,12 @@ def qc_holder_dummy() -> Manifold:
     return tube + fl + peg
 
 
-def magnet() -> Manifold:
-    return cyl_y(MAGNET_D, 0, MAGNET_T)
+def peg() -> Manifold:
+    """Locating peg pointing forward (+y) from y = 0, with a bevelled tip."""
+    straight = PEG_L - PEG_CHAMFER
+    body = cyl_y(PEG_D, -0.5, straight)          # 0.5 mm into the rack wall, so it joins it
+    tip = Manifold.cylinder(PEG_CHAMFER, PEG_D / 2, PEG_D / 2 - PEG_CHAMFER, SEG).rotate([-90, 0, 0]).translate([0, straight, 0])
+    return body + tip
 
 
 # --------------------------------------------------------------------------- #
@@ -289,20 +296,22 @@ def countersunk(x, y, z_top, length):
 
 def rack() -> Manifold:
     r = box(-RACK_W / 2, RACK_W / 2, 0, RACK_D, 0, RACK_H)
+    pegs = []
     for x, z in pocket_origins():
         r -= box(x - POCKET_W / 2, x + POCKET_W / 2, RACK_BACK, RACK_D + 1, z, z + POCKET_H)
         cx, cz = x, z   # cage stands centred in the pocket, on its floor, touching the back wall
         for fx in FEED_X:
             r -= cyl_y(RACK_HOLE_D, -1, RACK_BACK + 1, cx + fx, cz + Z_FLOOR + FEED_Z)
-        for mx in (-MAGNET_X, MAGNET_X):
-            r -= cyl_y(MAGNET_D + 0.3, RACK_BACK - MAGNET_T - 0.2, RACK_BACK + 1, cx + mx, cz + MAGNET_Z)
+        for mx in (-SOCKET_X, SOCKET_X):
+            pegs.append(peg().translate([cx + mx, RACK_BACK, cz + SOCKET_Z]))
         # windows in the walls beside the cage's vents (air)
         for wx in (x - POCKET_W / 2 - RACK_WALL - 1, x + POCKET_W / 2 - 1):
             r -= box(wx, wx + RACK_WALL + 2, RACK_BACK + Y_BEE0 + 1, RACK_BACK + Y_GLASS - 1, cz + Z_FLOOR + 1, cz + Z_ROOF - 1)
     # countersunk screws through the bottom slab into the stand
     for x, y in screw_points():
         r -= countersunk(x, y, RACK_FLOOR, RACK_FLOOR + 1)
-    return r
+    # 2 pegs on the back wall of each pocket: they go into the sockets in the back of the cage
+    return r + Manifold.compose(pegs)
 
 
 def stand() -> Manifold:
@@ -375,20 +384,16 @@ def export_parts(names=None) -> dict[str, trimesh.Trimesh]:
 # the fit check: build everything together and test it
 # --------------------------------------------------------------------------- #
 def assembly():
-    """Every printed part in place: stand, rack, 4 cages each with foundation, 3 caps and magnets (no glass).
+    """Every printed part in place: stand, rack (with pegs), 4 cages each with foundation and 3 caps (no glass).
     Feeder holes stay open. Returns {name: Manifold} in world coordinates."""
     parts = {"stand": stand(), "rack": rack()}
-    c, g, f, cap, mag = cage(), glass(), foundation(), qc_cap(), magnet()
+    c, g, f, cap = cage(), glass(), foundation(), qc_cap()
     for i, (x, z) in enumerate(pocket_origins(), 1):
         at = [x, RACK_BACK, z]
         parts[f"cage{i}"] = c.translate(at)
         parts[f"foundation{i}"] = f.translate(at)
         for j, qx in enumerate(QC_X, 1):
             parts[f"cap{i}.{j}"] = cap.translate([x + qx, RACK_BACK + QC_YW, z])
-        for k, mx in enumerate((-MAGNET_X, MAGNET_X), 1):
-            # one magnet at the bottom of each recess: in the cage back and in the rack back, 0.4 mm apart
-            parts[f"magnet{i}.{k}_cage"] = mag.translate([x + mx, RACK_BACK + 0.2, z + MAGNET_Z])
-            parts[f"magnet{i}.{k}_rack"] = mag.translate([x + mx, RACK_BACK - MAGNET_T - 0.2, z + MAGNET_Z])
     return parts
 
 
@@ -483,6 +488,12 @@ def check() -> bool:
             blocked.append(f"pocket {i}: {v:.1f} mm3")
     report(not blocked, f"a cage with 3 queen cells slides into each pocket ({POCKET_CLR} mm each side, {HEAD_ROOM:.0f} mm over the holders)" + ("" if not blocked else ": " + "; ".join(blocked)))
 
+    # 6b. pegs sit in the cage sockets: centred, with play, and the cage still rests against the rack wall
+    play = (SOCKET_D - PEG_D) / 2
+    report(0 < play <= 0.3 and PEG_L < SOCKET_T,
+           f"rack pegs Ø {PEG_D} x {PEG_L} mm sit in the cage sockets Ø {SOCKET_D} x {SOCKET_T} mm "
+           f"({play:.2f} mm play all round, {SOCKET_T - PEG_L:.1f} mm free at the bottom)")
+
     # 7. caps don't stick out more than a holder does
     cap_h = CAP_FLANGE_T
     report(cap_h <= QC_ABOVE, f"caps stick out {cap_h:.1f} mm (holders {QC_ABOVE:.0f} mm)")
@@ -500,7 +511,7 @@ def check() -> bool:
 
 
 COLOURS = {"stand": (120, 120, 120), "rack": (70, 70, 70), "cage": (245, 245, 245), "glass": (150, 210, 255),
-           "foundation": (225, 190, 100), "cap": (90, 140, 230), "magnet": (200, 40, 40)}
+           "foundation": (225, 190, 100), "cap": (90, 140, 230)}
 
 
 def colour_of(name):
