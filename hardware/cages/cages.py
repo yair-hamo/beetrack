@@ -43,16 +43,18 @@ BACK_T = 4.0            # back wall (holds the feeder holes)
 
 # glass cover: slides down through a slot in the top wall into grooves in the side and bottom walls
 GLASS_T = 2.0           # measure your glass / perspex!
-GLASS_CLR = 0.6         # extra room so it slides freely
+GLASS_SLOT = 3.0        # width of the glass route (groove + top slot); 3 mm like the cages already in use
+GLASS_CLR = GLASS_SLOT - GLASS_T   # play, so the glass slides freely
 GROOVE = 2.5            # how deep the glass sits in each side wall and the bottom wall
-LIP = 2.0               # wall in front of the glass (holds it in)
+LIP = 2.0               # wall in front of the glass on the sides and bottom (holds it in); open at the top
 GLASS_UP = 3.0          # how far the glass sticks out above the cage, to grab it
 
 # comb foundation sheet (printed separately, lies on the inside of the back wall)
-FOUND_T = 1.8           # total thickness: 1.0 mm sheet + 0.8 mm cell walls
-FOUND_BASE = 1.0
+FOUND_BASE = 1.0        # the flat sheet
+CELL_H = 2.0            # how far the cell walls stand up from the sheet
+FOUND_T = FOUND_BASE + CELL_H
 CELL = 5.4              # worker cell size, centre to centre (flat to flat)
-CELL_WALL = 0.6
+CELL_WALL = 0.8         # cell wall thickness (2 lines of a 0.4 mm nozzle)
 FIT = 0.3               # clearance around parts that go into each other
 
 # holes
@@ -74,7 +76,7 @@ CAP_FLANGE_T = 1.6
 CAP_KNOB_D, CAP_KNOB_H = 8.0, 4.0
 
 # vents (bees can't pass 1.8 mm)
-VENT_W, VENT_PITCH = 1.8, 4.5
+VENT_W, VENT_PITCH = 1.8, 3.6   # slit height, slit-to-slit (1.8 mm bars between slits)
 
 # magnets: 2 in the back of each cage, 2 in the rack behind each cage
 MAGNET_D, MAGNET_T = 10.0, 2.0
@@ -178,10 +180,9 @@ def cage() -> Manifold:
     # glass groove (sides + bottom) and the slot through the top wall
     gw = IN_W / 2 + GROOVE
     body -= box(-gw, gw, Y_GLASS, Y_LIP, Z_FLOOR - GROOVE, CAGE_H + 1)
-    # front window (the lip holds the glass on the 3 grooved sides)
-    body -= box(-IN_W / 2, IN_W / 2, Y_LIP - 0.01, CAGE_D + 1, Z_FLOOR, Z_ROOF)
-    # finger notch in the front lip above the window, to push the glass up
-    body -= box(-8, 8, Y_LIP - 0.01, CAGE_D + 1, Z_ROOF - 0.01, CAGE_H + 1)
+    # front window, open to the top (the lip holds the glass on the sides and the bottom;
+    # nothing bridges over the glass slot, so it prints without supports)
+    body -= box(-IN_W / 2, IN_W / 2, Y_LIP - 0.01, CAGE_D + 1, Z_FLOOR, CAGE_H + 1)
     # feeder holes: back wall, low
     for x in FEED_X:
         body -= cyl_y(FEED_D, -1, Y_FOUND + 0.01, x, Z_FLOOR + FEED_Z)
@@ -190,8 +191,8 @@ def cage() -> Manifold:
         body -= cyl_z(QC_D, Z_ROOF - 0.01, CAGE_H + 1, x, QC_YW)
     # vents: horizontal slits through both side walls, in the bee room
     vy0, vy1 = Y_BEE0 + 2, Y_GLASS - 2
-    z = Z_FLOOR + 22
-    while z + VENT_W < Z_ROOF - 10:
+    z = Z_FLOOR + 3
+    while z + VENT_W <= Z_ROOF - 3:
         body -= box(-hw - 1, -IN_W / 2 + 0.01, vy0, vy1, z, z + VENT_W)
         body -= box(IN_W / 2 - 0.01, hw + 1, vy0, vy1, z, z + VENT_W)
         z += VENT_PITCH
@@ -291,7 +292,7 @@ def rack() -> Manifold:
             r -= cyl_y(MAGNET_D + 0.3, RACK_BACK - MAGNET_T - 0.2, RACK_BACK + 1, cx + mx, cz + MAGNET_Z)
         # windows in the walls beside the cage's vents (air)
         for wx in (x - POCKET_W / 2 - RACK_WALL - 1, x + POCKET_W / 2 - 1):
-            r -= box(wx, wx + RACK_WALL + 2, RACK_BACK + Y_BEE0 + 1, RACK_BACK + Y_GLASS - 1, cz + Z_FLOOR + 18, cz + Z_ROOF - 6)
+            r -= box(wx, wx + RACK_WALL + 2, RACK_BACK + Y_BEE0 + 1, RACK_BACK + Y_GLASS - 1, cz + Z_FLOOR + 1, cz + Z_ROOF - 1)
     # countersunk screws through the bottom slab into the stand
     for x, y in screw_points():
         r -= countersunk(x, y, RACK_FLOOR, RACK_FLOOR + 1)
@@ -368,14 +369,13 @@ def export_parts(names=None) -> dict[str, trimesh.Trimesh]:
 # the fit check: build everything together and test it
 # --------------------------------------------------------------------------- #
 def assembly():
-    """Every part in place: stand, rack, 4 cages each with glass, foundation, 3 caps and magnets.
+    """Every printed part in place: stand, rack, 4 cages each with foundation, 3 caps and magnets (no glass).
     Feeder holes stay open. Returns {name: Manifold} in world coordinates."""
     parts = {"stand": stand(), "rack": rack()}
     c, g, f, cap, mag = cage(), glass(), foundation(), qc_cap(), magnet()
     for i, (x, z) in enumerate(pocket_origins(), 1):
         at = [x, RACK_BACK, z]
         parts[f"cage{i}"] = c.translate(at)
-        parts[f"glass{i}"] = g.translate(at)
         parts[f"foundation{i}"] = f.translate(at)
         for j, qx in enumerate(QC_X, 1):
             parts[f"cap{i}.{j}"] = cap.translate([x + qx, RACK_BACK + QC_YW, z])
@@ -400,10 +400,12 @@ def check() -> bool:
 
     # 1. every printable part is a closed solid and fits the printer
     for name, (build, orient, *_rest) in PARTS.items():
-        t = to_trimesh(place_on_bed(orient(build())))
+        m = place_on_bed(orient(build()))
+        t = to_trimesh(m)
         ext = t.bounds[1] - t.bounds[0]
-        report(t.is_watertight and bool(np.all(ext <= BED - 4)),
-               f"{name}: closed solid, {ext[0]:.1f} x {ext[1]:.1f} x {ext[2]:.1f} mm fits the P2S bed")
+        pieces = len(m.decompose())
+        report(t.is_watertight and pieces == 1 and bool(np.all(ext <= BED - 4)),
+               f"{name}: one closed solid ({pieces} piece), {ext[0]:.1f} x {ext[1]:.1f} x {ext[2]:.1f} mm fits the P2S bed")
 
     parts = assembly()
 
@@ -578,7 +580,7 @@ def render(parts):
         ax.autoscale_view()
         ax.set_aspect("equal")
         ax.grid(alpha=0.25)
-    fig.suptitle("Fit check: stand + rack + 4 cages, each with glass, comb foundation, 3 queen-cell caps "
+    fig.suptitle("Fit check: stand + rack + 4 cages, each with comb foundation and 3 queen-cell caps (glass not shown) "
                  "(feeder holes left open)", fontsize=13)
     fig.tight_layout(rect=(0, 0, 1, 0.94))
     fig.savefig(CHECK / "assembly.png", dpi=110)
