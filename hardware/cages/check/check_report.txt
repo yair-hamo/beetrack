@@ -1,5 +1,6 @@
 Fit check (python hardware/cages/cages.py check)
 
+[OK ] already-printed parts unchanged (cage, foundation, qc_cap, rack.stl identical to the printed files)
 [OK ] cage.stl: one closed solid (1 piece), 110.0 x 100.0 x 27.0 mm fits the P2S bed
 [OK ] cage.stl prints without supports: no point of any overhang is more than 2.6 mm from material below it (limit 10.5: a 21 mm bridge); widest ledges/half-bridges 2.6, 1.6 mm
 [OK ] foundation.stl: one closed solid (1 piece), 100.3 x 90.3 x 3.0 mm fits the P2S bed

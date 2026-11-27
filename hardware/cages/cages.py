@@ -543,7 +543,14 @@ def flat_front_up(m: Manifold) -> Manifold:
     return m.rotate([90, 0, 0])
 
 
-ALREADY_PRINTED = {"cage", "foundation", "qc_cap", "rack"}   # keep these files unchanged; only the stand is new
+# these parts are ALREADY PRINTED: their STL files must never change. The check compares each file with the
+# fingerprint (SHA-256) of the file that was printed and fails if it differs. Only the stand is still to print.
+ALREADY_PRINTED = {
+    "cage": "3bf847dfec9a7a50c2cfd2b7a5c813ecd3541c8cc1cadd8961fff981cb4ed479",
+    "foundation": "4bfbb8d897c85552aae4b3d16b2e441c379d4f3e396ce2f61fca86b968a01c40",
+    "qc_cap": "9917f7497d16a6001086cfc423ea3edb54d1ab641558b64adb07c74ba56f0f67",
+    "rack": "def6cc5c27a6e559f92e0a8be988f1c07de6f301302368bd90ddc44d1d29e17e",
+}
 
 PARTS = {
     # name: (builder, print orientation, how many to print, colour, note)
@@ -610,6 +617,10 @@ def check() -> bool:
 
     # 1. every printable part is a closed solid and fits the printer
     #    (read back from the STL files that will be printed, not rebuilt)
+    import hashlib
+    changed = [n for n, h in ALREADY_PRINTED.items() if hashlib.sha256((STL / f"{n}.stl").read_bytes()).hexdigest() != h]
+    report(not changed, f"already-printed parts unchanged ({', '.join(ALREADY_PRINTED)}.stl identical to the printed files)"
+           + ("" if not changed else ": CHANGED: " + ", ".join(changed)))
     for name in PARTS:
         t = trimesh.load(STL / f"{name}.stl")
         ext = t.bounds[1] - t.bounds[0]
