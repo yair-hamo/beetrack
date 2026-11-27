@@ -28,7 +28,7 @@ from pathlib import Path
 
 import numpy as np
 import trimesh
-from manifold3d import Manifold
+from manifold3d import Manifold, Mesh
 
 # --------------------------------------------------------------------------- #
 # PARAMETERS
@@ -57,6 +57,9 @@ FOUND_T = FOUND_BASE + CELL_H
 CELL = 5.4              # worker cell size, centre to centre (flat to flat)
 CELL_WALL = 0.8         # cell wall thickness (2 lines of a 0.4 mm nozzle)
 FIT = 0.3               # clearance around parts that go into each other
+# the first layer always squashes out a little ("elephant foot"): edges and hole mouths on the bed face get a
+# small 45-degree bevel, so they don't come out tight or undersized
+BED_CHAMFER = 0.4
 # the foundation is a press fit, so it can't fall forward: the sheet itself has a small gap to the walls, and
 # round ribs on its 4 edges stand out past that gap and press into the walls (left, right, floor, roof)
 FOUND_CLR = 0.15        # gap between the sheet's edges and the walls
@@ -79,8 +82,13 @@ QC_COMB_GAP = 1.0       # hole edge -> tops of the foundation cells (the foundat
 QC_GLASS_GAP = 1.0      # hole edge -> glass route
 
 # cap for an unused queen-cell hole
-CAP_STEM_D = 12.6
-CAP_FLANGE_D = 18.0
+CAP_STEM_D = 12.7                 # stem core: 0.15 mm gap in the 13 mm hole
+# the cap is a press fit (the plain 12.6 stem was too loose): ribs on the stem press into the hole wall
+CAP_RIBS = 6
+CAP_RIB_D = 1.2
+CAP_PRESS = 0.15                  # how far each rib presses into the hole wall. Too tight: 0.05-0.1. Loose: 0.25.
+CAP_RIB_LEAD = 1.0                # the lower end of each rib is tapered, so the cap starts into the hole easily
+CAP_FLANGE_D = 22.0               # as wide as a holder disc, so it covers the whole glass edge
 CAP_FLANGE_T = 1.6
 CAP_PRY_W, CAP_PRY_D = 4.0, 1.0   # small groove under one edge of the flange: lift the cap with a screwdriver tip
 
@@ -91,7 +99,7 @@ VENT_W, VENT_PITCH = 1.8, 3.6   # slit height, slit-to-slit (1.8 mm bars between
 SOCKET_D, SOCKET_T = 10.3, 2.2    # the sockets in the cage (first made for 10 x 2 mm magnets)
 SOCKET_X, SOCKET_Z = 38.0, 80.0   # from the cage centre / from the cage bottom
 PEG_D = 10.0                      # peg core on the rack: 0.15 mm gap all round in the socket
-PEG_L = 2.0                       # 0.2 mm shorter than the socket is deep, so the cage still touches the rack
+PEG_L = 1.8                       # 0.4 mm shorter than the socket is deep: the bridged socket ceiling may sag a little
 PEG_CHAMFER = 0.4                 # bevelled tip, guides the cage onto the pegs
 # the pegs are a press fit, so a cage can't slide or fall out of its pocket: small round ribs on each peg stand
 # out past the gap and press into the socket wall (same idea as the foundation ribs)
@@ -107,11 +115,18 @@ RACK_FLOOR = 6.0        # the bottom slab (the countersunk screws to the stand g
 POCKET_CLR = 0.5        # cage <-> pocket walls, each side
 HEAD_ROOM = 4.0         # above the queen-cell holders
 # the holes in the rack back wall behind the feeder holes are exactly the cage's (FEED_D, same centres)
+RACK_SLOT_W, RACK_SLOT_BAR = 8.0, 3.0   # air slots in the rack walls: <= 8 mm bridges print clean
 
 # stand: the rack drops into it; it stands on a table or bolts onto a 2020 aluminium profile
 STAND_T = 8.0
 STAND_FRONT, STAND_BACK = 60.0, 55.0     # how far the stand reaches in front of / behind the rack
 RIM_H, RIM_T = 6.0, 4.0
+# the stand holds the rack by itself (the 2 screws are optional): a tall cheek on each side of the rack that wraps
+# round its back and front corners, braced by a wide triangular wing down to the stand's front and back edges
+CHEEK_T = 6.0           # side cheeks + wings, thickness
+CHEEK_H = 120.0         # how high the cheeks hold the rack (the lower row of pockets is 118 mm high)
+WRAP_BACK = 20.0        # the cheeks wrap this far over the rack's back (clear of the feeder holes)
+WRAP_FRONT = 3.0        # ... and this far over the front of the rack's outer walls (4 mm; the cages start at 4.5)
 RAIL_W, RAIL_DEPTH = 20.4, 3.0           # groove underneath for a 2020 profile
 M5, M5_HEAD = 5.5, 10.4                  # M5 hole; countersunk head diameter
 M5_NUT = 8.4                             # M5 hex nut across flats + clearance
@@ -153,7 +168,7 @@ POCKET_D = CAGE_D + POCKET_CLR
 RACK_W = 2 * POCKET_W + 3 * RACK_WALL
 RACK_H = RACK_FLOOR + 2 * POCKET_H + 2 * RACK_WALL
 RACK_D = RACK_BACK + POCKET_D
-STAND_W = RACK_W + 2 * (FIT + RIM_T)
+STAND_W = RACK_W + 2 * (FIT + CHEEK_T)
 STAND_Y0 = -STAND_BACK
 STAND_D = STAND_BACK + RACK_D + STAND_FRONT
 STAND_HOLE_BACK_Y = STAND_Y0 + STAND_BACK / 2           # the 2 M5 holes for T-nuts in a 2020 profile
@@ -177,12 +192,52 @@ def cyl_y(d, y0, y1, x=0.0, z=0.0, seg=SEG) -> Manifold:
     return Manifold.cylinder(y1 - y0, d / 2, d / 2, seg).rotate([-90, 0, 0]).translate([x, y0, z])
 
 
+def mouth_y(d, y0, x=0.0, z=0.0, c=None) -> Manifold:
+    """45-degree bevel at the mouth of a hole along +y whose open face is at y = y0 (the bed face)."""
+    c = BED_CHAMFER if c is None else c
+    return Manifold.cylinder(c + 0.01, d / 2 + c + 0.01, d / 2 - 0.0, SEG).rotate([-90, 0, 0]).translate([x, y0 - 0.01, z])
+
+
 def cyl_x(d, x0, x1, y=0.0, z=0.0, seg=SEG) -> Manifold:
     return Manifold.cylinder(x1 - x0, d / 2, d / 2, seg).rotate([0, 90, 0]).translate([x0, y, z])
 
 
 def union(parts) -> Manifold:
     return Manifold.batch_boolean(list(parts), 0) if len(parts) > 1 else parts[0]   # 0 = Add
+
+
+def unsupported(m: Manifold, z_levels, res=0.2, margin=12.0):
+    """For a part in print orientation: at each height where a flat face points down, the overhanging area is what
+    is solid just above but not just below. For every overhanging point, measure how far it is (in x-y) to the
+    nearest material underneath it: half a bridge's span, or a ledge's full width. Returns [(distance, z, size)]."""
+    from matplotlib.path import Path as MPath
+    from scipy.ndimage import distance_transform_edt
+
+    def raster(cs, x0, y0, nx, ny):
+        polys = cs.to_polygons()
+        if not polys:
+            return np.zeros((ny, nx), bool)
+        path = MPath.make_compound_path(*[MPath(np.vstack([p, p[:1]]), closed=True) for p in polys])
+        gx, gy = np.meshgrid(x0 + (np.arange(nx) + 0.5) * res, y0 + (np.arange(ny) + 0.5) * res)
+        return path.contains_points(np.c_[gx.ravel(), gy.ravel()]).reshape(ny, nx)
+
+    out = []
+    for z in z_levels:
+        below = m.slice(z - 0.1)
+        over = m.slice(z + 0.1) - below
+        for piece in over.decompose():
+            if piece.area() < 0.3:
+                continue
+            bx0, by0, bx1, by1 = piece.bounds()
+            x0, y0 = bx0 - margin, by0 - margin
+            nx, ny = int((bx1 - bx0 + 2 * margin) / res) + 1, int((by1 - by0 + 2 * margin) / res) + 1
+            face = raster(piece, x0, y0, nx, ny)
+            if not face.any():
+                continue
+            sup = raster(below, x0, y0, nx, ny)
+            d = distance_transform_edt(~sup) * res if sup.any() else np.full(sup.shape, 1e9)
+            out.append((float(d[face].max()), z, (bx1 - bx0, by1 - by0)))
+    return out
 
 
 def to_trimesh(m: Manifold) -> trimesh.Trimesh:
@@ -208,6 +263,7 @@ def cage() -> Manifold:
     # feeder holes: back wall, low
     for x in FEED_X:
         body -= cyl_y(FEED_D, -1, Y_FOUND + 0.01, x, Z_FLOOR + FEED_Z)
+        body -= mouth_y(FEED_D, 0, x, Z_FLOOR + FEED_Z)
     # queen-cell holes: top wall
     for x in QC_X:
         body -= cyl_z(QC_D, Z_ROOF - 0.01, CAGE_H + 1, x, QC_YW)
@@ -221,6 +277,7 @@ def cage() -> Manifold:
     # 2 locating sockets in the outside of the back wall (the rack's pegs go in)
     for x in (-SOCKET_X, SOCKET_X):
         body -= cyl_y(SOCKET_D, -1, SOCKET_T, x, SOCKET_Z)
+        body -= mouth_y(SOCKET_D, 0, x, SOCKET_Z)
     return body
 
 
@@ -234,7 +291,10 @@ def foundation(ribs: bool = True) -> Manifold:
     wall, held by press-fit ribs on its edges."""
     w, h = IN_W - 2 * FOUND_CLR, IN_H - 2 * FOUND_CLR
     x0, z0 = -w / 2, Z_FLOOR + FOUND_CLR
-    sheet = box(x0, x0 + w, Y_FOUND, Y_FOUND + FOUND_T, z0, z0 + h)
+    c = BED_CHAMFER
+    sheet = union([box(x0, x0 + w, Y_FOUND + c, Y_FOUND + FOUND_T, z0, z0 + h),
+                   Manifold.hull(union([box(x0 + c, x0 + w - c, Y_FOUND, Y_FOUND + 0.01, z0 + c, z0 + h - c),
+                                        box(x0, x0 + w, Y_FOUND + c, Y_FOUND + c + 0.01, z0, z0 + h)]))])
     # cells: hexagonal pockets in the front face, kept 1.5 mm from the edges and 1.8 mm from the holes
     r = (CELL - CELL_WALL) / math.sqrt(3)        # circumradius of a cell pocket
     hexes = []
@@ -257,6 +317,7 @@ def foundation(ribs: bool = True) -> Manifold:
         sheet = union([sheet, foundation_ribs()])
     for fx in FEED_X:
         sheet -= cyl_y(FEED_D, Y_FOUND - 1, Y_FOUND + FOUND_T + 1, fx, Z_FLOOR + FEED_Z)
+        sheet -= mouth_y(FEED_D, Y_FOUND, fx, Z_FLOOR + FEED_Z)
     return sheet
 
 
@@ -284,10 +345,28 @@ def qc_cap() -> Manifold:
     """Closes an unused queen-cell hole. Sits in the hole at QC_X[0] position."""
     stem = cyl_z(CAP_STEM_D, Z_ROOF, CAGE_H, 0, 0)
     fl = cyl_z(CAP_FLANGE_D, CAGE_H, CAGE_H + CAP_FLANGE_T, 0, 0)
-    cap = stem + fl
+    cap = union([stem, fl, cap_ribs()])
     # pry groove: under the flange, from its rim to the stem
     cap -= box(CAP_STEM_D / 2, CAP_FLANGE_D / 2 + 1, -CAP_PRY_W / 2, CAP_PRY_W / 2, CAGE_H - 0.01, CAGE_H + CAP_PRY_D)
     return cap
+
+
+def cap_ribs() -> Manifold:
+    """Round vertical ribs around the cap stem (cap at the origin); each reaches CAP_PRESS past the hole wall."""
+    rr = CAP_RIB_D / 2
+    rc = QC_D / 2 + CAP_PRESS - rr
+    stem_l = CAGE_H - Z_ROOF
+    one = union([Manifold.cylinder(CAP_RIB_LEAD, rr - 0.35, rr, 24),
+                 Manifold.cylinder(stem_l - CAP_RIB_LEAD + 0.5, rr, rr, 24).translate([0, 0, CAP_RIB_LEAD])])
+    one = one.translate([0, 0, Z_ROOF])
+    return Manifold.compose([one.translate([rc * math.cos(a), rc * math.sin(a), 0])
+                             for a in (2 * math.pi * (k + 0.5) / CAP_RIBS for k in range(CAP_RIBS))])
+
+
+def pressed_cap() -> Manifold:
+    """The cap as it sits in its hole: the rib tips squashed flat against the hole wall."""
+    ring = cyl_z(QC_D + 2, Z_ROOF - 1, CAGE_H, 0, 0) - cyl_z(QC_D, Z_ROOF - 2, CAGE_H + 1, 0, 0)
+    return qc_cap() - ring
 
 
 def qc_holder_dummy() -> Manifold:
@@ -355,11 +434,16 @@ def rack(peg_ribs_on: bool = True) -> Manifold:
         cx, cz = x, z   # cage stands centred in the pocket, on its floor, touching the back wall
         for fx in FEED_X:
             r -= cyl_y(FEED_D, -1, RACK_BACK + 1, cx + fx, cz + Z_FLOOR + FEED_Z)
+            r -= mouth_y(FEED_D, 0, cx + fx, cz + Z_FLOOR + FEED_Z)
         for mx in (-SOCKET_X, SOCKET_X):
             pegs.append(peg(peg_ribs_on).translate([cx + mx, RACK_BACK, cz + SOCKET_Z]))
-        # windows in the walls beside the cage's vents (air)
+        # windows in the walls beside the cage's vents (air): short slots with bars between them, because the rack
+        # prints on its back and the wall above each slot has to bridge it (one 88 mm window would sag)
         for wx in (x - POCKET_W / 2 - RACK_WALL - 1, x + POCKET_W / 2 - 1):
-            r -= box(wx, wx + RACK_WALL + 2, RACK_BACK + Y_BEE0 + 1, RACK_BACK + Y_GLASS - 1, cz + Z_FLOOR + 1, cz + Z_ROOF - 1)
+            z = cz + Z_FLOOR + 1
+            while z + RACK_SLOT_W <= cz + Z_ROOF - 1 + 0.01:
+                r -= box(wx, wx + RACK_WALL + 2, RACK_BACK + Y_BEE0 + 1, RACK_BACK + Y_GLASS - 1, z, z + RACK_SLOT_W)
+                z += RACK_SLOT_W + RACK_SLOT_BAR
     # countersunk screws through the bottom slab into the stand
     for x, y in screw_points():
         r -= countersunk(x, y, RACK_FLOOR, RACK_FLOOR + 1)
@@ -375,6 +459,21 @@ def stand() -> Manifold:
     rim = box(rim_in[0] - RIM_T, rim_in[1] + RIM_T, rim_in[2] - RIM_T, rim_in[3] + RIM_T, zt - 0.01, zt + RIM_H)
     rim -= box(*rim_in, zt - 1, zt + RIM_H + 1)
     s += rim
+    # cheeks with wings: one solid on each side (trapezoid in y-z: the stand's full depth at the bottom, the rack's
+    # depth at the top), plus the wraps round the back and front corners
+    yb, yf = rim_in[2] - RIM_T, rim_in[3] + RIM_T          # back / front of the rim
+    for sx in (-1, 1):
+        xa, xb = sorted((sx * rim_in[1], sx * (rim_in[1] + CHEEK_T)))
+        wing = Manifold.hull(union([box(xa, xb, STAND_Y0, STAND_Y0 + STAND_D, zt - 0.01, zt + 0.01),
+                                    box(xa, xb, yb, yf, zt + CHEEK_H - 0.01, zt + CHEEK_H)]))
+        # air: an opening beside the rack's side slots (<= 11 mm wide, so its top prints as a short bridge)
+        wing -= box(xa - 1, xb + 1, RACK_BACK + Y_BEE0 + 2, RACK_BACK + Y_BEE0 + 13, RACK_FLOOR + Z_FLOOR + 1,
+                    zt + CHEEK_H - 8)
+        xw0, xw1 = sorted((sx * rim_in[1], sx * (rim_in[1] - WRAP_BACK)))
+        back = box(xw0, xw1, yb, rim_in[2], zt - 0.01, zt + CHEEK_H)
+        xf0, xf1 = sorted((sx * rim_in[1], sx * (rim_in[1] - WRAP_FRONT - FIT)))
+        front = box(xf0, xf1, rim_in[3], yf, zt - 0.01, zt + CHEEK_H)
+        s = union([s, wing, back, front])
     # groove for a 2020 profile, along y, and 2 M5 holes for T-nuts (one in front of the rack, one behind)
     s -= box(-RAIL_W / 2, RAIL_W / 2, STAND_Y0 - 1, STAND_Y0 + STAND_D + 1, zt - STAND_T - 1, zt - STAND_T + RAIL_DEPTH)
     for y in (STAND_HOLE_BACK_Y, STAND_HOLE_FRONT_Y):
@@ -439,7 +538,7 @@ def export_parts(names=None) -> dict[str, trimesh.Trimesh]:
 def assembly():
     """Every printed part in place: stand, rack (with pegs), 4 cages each with foundation and 3 caps (no glass).
     Feeder holes stay open. Returns {name: Manifold} in world coordinates."""
-    c, g, f, cap = cage(), glass(), foundation(), qc_cap()
+    c, g, f, cap = cage(), glass(), foundation(), pressed_cap()
     squash = union([cyl_y(SOCKET_D + 2 * PEG_PRESS + 0.2, RACK_BACK - 0.01, RACK_BACK + SOCKET_T, x + mx, z + SOCKET_Z)
                     - cyl_y(SOCKET_D, RACK_BACK - 1, RACK_BACK + SOCKET_T + 1, x + mx, z + SOCKET_Z)
                     for x, z in pocket_origins() for mx in (-SOCKET_X, SOCKET_X)])
@@ -463,16 +562,29 @@ def check() -> bool:
         lines.append(f"[{'OK ' if passed else 'FAIL'}] {text}")
         print(lines[-1])
 
+    MAX_BRIDGE = 21.0   # longest flat bridge PETG prints cleanly (mm); the stand's 20.4 mm rail groove is the longest
     TOL = 0.5   # mm^3: touching faces give ~0; anything bigger is a real collision
 
     # 1. every printable part is a closed solid and fits the printer
-    for name, (build, orient, *_rest) in PARTS.items():
-        m = place_on_bed(orient(build()))
-        t = to_trimesh(m)
+    #    (read back from the STL files that will be printed, not rebuilt)
+    for name in PARTS:
+        t = trimesh.load(STL / f"{name}.stl")
         ext = t.bounds[1] - t.bounds[0]
-        pieces = len(m.decompose())
+        pieces = len(t.split(only_watertight=False))
         report(t.is_watertight and pieces == 1 and bool(np.all(ext <= BED - 4)),
-               f"{name}: one closed solid ({pieces} piece), {ext[0]:.1f} x {ext[1]:.1f} x {ext[2]:.1f} mm fits the P2S bed")
+               f"{name}.stl: one closed solid ({pieces} piece), {ext[0]:.1f} x {ext[1]:.1f} x {ext[2]:.1f} mm fits the P2S bed")
+        # printable without supports: every flat face pointing down (above the bed) must be a short bridge
+        down = (t.face_normals[:, 2] < -0.95) & (t.triangles_center[:, 2] > 0.05)
+        levels = sorted(set(np.round(t.triangles_center[down, 2], 2)))
+        mf = Manifold(Mesh(vert_properties=np.asarray(t.vertices, np.float32), tri_verts=np.asarray(t.faces, np.uint32)))
+        spans = unsupported(mf, levels)
+        worst = max(spans, default=(0.0, 0.0, (0, 0)))
+        bad = [sp for sp in spans if sp[0] > MAX_BRIDGE / 2]
+        ledges = sorted({round(sp[0], 1) for sp in spans if 1.5 < sp[0] <= MAX_BRIDGE / 2}, reverse=True)
+        report(not bad, f"{name}.stl prints without supports: no point of any overhang is more than {worst[0]:.1f} mm from "
+               f"material below it (limit {MAX_BRIDGE / 2:.1f}: a {MAX_BRIDGE:.0f} mm bridge)"
+               + (f"; widest ledges/half-bridges {', '.join(f'{v:.1f}' for v in ledges[:4])} mm" if ledges else "")
+               + ("" if not bad else ": too far: " + "; ".join(f"{d:.1f} mm at height {z:.1f} ({sz[0]:.0f} x {sz[1]:.0f} mm)" for d, z, sz in bad[:5])))
 
     parts = assembly()
 
@@ -626,6 +738,20 @@ def check() -> bool:
            + ("" if same_r else ": " + "; ".join(rows)))
 
     # 7. caps don't stick out more than a holder does
+    # 7a. the caps are a press fit in the queen-cell holes: only the rib tips touch, CAP_PRESS into the hole wall
+    cap0 = qc_cap() - cap_ribs()
+    one_hole = [(qx, QC_YW) for qx in QC_X]
+    v_core = sum((cap0.translate([qx, qy, 0]) ^ c).volume() for qx, qy in one_hole)
+    v_rib = sum((qc_cap().translate([qx, qy, 0]) ^ c).volume() for qx, qy in one_hole)
+    v_out = sum(((qc_cap().translate([qx, qy, 0]) ^ c) - cyl_z(QC_D + 2 * CAP_PRESS + 0.05, Z_ROOF - 1, CAGE_H + 1, qx, qy)).volume()
+                for qx, qy in one_hole)
+    bb = cap_ribs().bounding_box()
+    reach = max(-bb[0], bb[3], -bb[1], bb[4])
+    cap_press = reach - QC_D / 2
+    # ribs sit at 30, 90, 150 ... degrees: the bounding box sees the ones at 90/270 exactly
+    report(v_core < TOL and v_rib > TOL and v_out < TOL and abs(cap_press - CAP_PRESS) < 0.02,
+           f"caps are a press fit: stem core Ø {CAP_STEM_D} ({(QC_D - CAP_STEM_D) / 2:.2f} mm gap), {CAP_RIBS} ribs press "
+           f"{cap_press:.2f} mm into the Ø {QC_D:.0f} hole; only the ribs touch")
     cap_h = CAP_FLANGE_T
     report(cap_h <= QC_ABOVE, f"caps stick out {cap_h:.1f} mm (holders {QC_ABOVE:.0f} mm)")
 
@@ -635,6 +761,26 @@ def check() -> bool:
     # 9. stability on a table
     tip = math.degrees(math.atan2(STAND_BACK, RACK_H / 2))
     report(tip > 15, f"stand reaches {STAND_BACK:.0f} mm behind and {STAND_FRONT:.0f} mm in front of the rack: tips over only past ~{tip:.0f} degrees")
+
+    # 9b. the stand holds the rack without the screws: the rack can't tilt or slide in any direction, only lift out
+    st, rk = parts["stand"], parts["rack"]
+    def tilt(m, axis, pivot, deg):
+        rot = [deg, 0, 0] if axis == "x" else [0, deg, 0]
+        return m.translate([-pivot[0], -pivot[1], -pivot[2]]).rotate(rot).translate(list(pivot))
+    moves = {
+        "tilt forward 2°": tilt(rk, "x", (0, RACK_D, 0), -2),
+        "tilt backward 2°": tilt(rk, "x", (0, 0, 0), 2),
+        "tilt left 2°": tilt(rk, "y", (-RACK_W / 2, 0, 0), -2),
+        "tilt right 2°": tilt(rk, "y", (RACK_W / 2, 0, 0), 2),
+        "slide 1 mm forward": rk.translate([0, 1, 0]), "slide 1 mm back": rk.translate([0, -1, 0]),
+        "slide 1 mm left": rk.translate([-1, 0, 0]), "slide 1 mm right": rk.translate([1, 0, 0]),
+    }
+    free = [n for n, m in moves.items() if (m ^ st).volume() < TOL]
+    lifts = (rk.translate([0, 0, 1]) ^ st).volume() < TOL
+    report(not free and lifts,
+           f"the stand holds the rack without screws: cheeks {CHEEK_H:.0f} mm high wrap its sides and corners, so it can't "
+           f"tilt or slide any way (tested: tilt 2° each way, slide 1 mm each way); it still lifts straight out"
+           + ("" if not free else ": FREE to " + ", ".join(free)))
 
     write_check_files(parts, lines)
     print("\nALL CHECKS PASSED" if ok else "\nSOME CHECKS FAILED")
