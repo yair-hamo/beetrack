@@ -134,6 +134,11 @@ STRUT = 7.0             # width of the wing struts (each wing is an open triangl
 FOOT_W = 16.0           # side beams under the wings, front to back (they carry the rubber feet)
 BAR_W = 10.0            # front and back cross bars
 SPINE_W = 28.0          # centre beam over the 2020 groove (20.4 mm) with the 2 M5 holes
+# the rack is a press fit in the stand: vertical round ribs on the stand's inside faces (cheeks, back wraps, front
+# wraps) press into the rack's outer walls. Push the rack down into the stand; it goes in firmly and stays.
+STAND_PRESS = 0.2       # how far each rib presses into the rack. Too tight: 0.1. Still loose: 0.3.
+STAND_RIB_D = 2.0
+STAND_RIB_LEAD = 5.0    # the top of each rib is tapered, so the rack starts in easily
 BOSS_D = 24.0           # solid round pad round each M5 screw under the rack
 RAIL_W, RAIL_DEPTH = 20.4, 3.0           # groove underneath for a 2020 profile
 M5, M5_HEAD = 5.5, 10.4                  # M5 hole; countersunk head diameter
@@ -463,7 +468,7 @@ def rack(peg_ribs_on: bool = True) -> Manifold:
     return r + Manifold.compose(pegs)
 
 
-def stand() -> Manifold:
+def stand(ribs: bool = True) -> Manifold:
     """The rack drops into the rim and is held by the cheeks; underneath, a groove sits on a 2020 profile.
     Built as a light frame: beams and open triangles instead of solid plates."""
     zt = 0.0                                   # top of the stand frame = rack bottom
@@ -514,6 +519,8 @@ def stand() -> Manifold:
         xf0, xf1 = sorted((sx * rim_in[1], sx * (rim_in[1] - WRAP_FRONT - FIT)))
         front = box(xf0, xf1, rim_in[3], yf - 0.5, zt - 0.01, zt + CHEEK_H - 0.5)
         s = union([s, wing, back, front])
+    if ribs:
+        s = union([s, stand_ribs()])
     # --- holes ------------------------------------------------------------------------------------------------
     # groove for a 2020 profile, along y, and 2 M5 holes for T-nuts (one in front of the rack, one behind)
     s -= box(-RAIL_W / 2, RAIL_W / 2, STAND_Y0 - 1, Y1 + 1, z0 - 1, z0 + RAIL_DEPTH)
@@ -528,6 +535,32 @@ def stand() -> Manifold:
         for y in (STAND_Y0 + BAR_W / 2 + 1, Y1 - BAR_W / 2 - 1):
             s -= cyl_z(10.5, z0 - 0.01, z0 + 0.8, x, y)
     return s
+
+
+def stand_ribs() -> Manifold:
+    """Vertical ribs on the stand's inside faces, each reaching STAND_PRESS into the rack's outer walls.
+    4 on each cheek (side), 2 on each back wrap and 1 on each front wrap (front-back): 14 in all."""
+    rr = STAND_RIB_D / 2
+    h = CHEEK_H - 1.0                                  # from the stand top (z = 0) up the cheeks
+    def rib(x, y):
+        body = Manifold.cylinder(h - STAND_RIB_LEAD, rr, rr, 24)
+        lead = Manifold.cylinder(STAND_RIB_LEAD, rr, rr - 0.6, 24).translate([0, 0, h - STAND_RIB_LEAD])
+        return union([body, lead]).translate([x, y, 0.0])
+    # rib centres: each rib sits on a stand face (FIT outside the rack) and its tip reaches STAND_PRESS into the rack
+    xs = RACK_W / 2 - STAND_PRESS + rr                 # sides
+    yb = STAND_PRESS - rr                              # back (the rack's back face is y = 0)
+    yf = RACK_D - STAND_PRESS + rr                     # front
+    out = []
+    for sx in (-1, 1):
+        out += [rib(sx * xs, y) for y in (2.0, 4.5, 27.5, 30.0)]           # on the cheek posts, beside the opening
+        out += [rib(sx * (RACK_W / 2 - x), yb) for x in (6.0, 15.0)]       # on the back wrap (20 mm wide)
+        out += [rib(sx * (RACK_W / 2 - 1.5), yf)]                          # on the front wrap (3 mm wide)
+    return Manifold.compose(out)
+
+
+def pressed_stand() -> Manifold:
+    """The stand with the rack in place: the rib tips squashed flat against the rack."""
+    return stand() - box(-RACK_W / 2, RACK_W / 2, 0, RACK_D, 0, RACK_H)
 
 
 # --------------------------------------------------------------------------- #
@@ -592,7 +625,7 @@ def assembly():
     squash = union([cyl_y(SOCKET_D + 2 * PEG_PRESS + 0.2, RACK_BACK - 0.01, RACK_BACK + SOCKET_T, x + mx, z + SOCKET_Z)
                     - cyl_y(SOCKET_D, RACK_BACK - 1, RACK_BACK + SOCKET_T + 1, x + mx, z + SOCKET_Z)
                     for x, z in pocket_origins() for mx in (-SOCKET_X, SOCKET_X)])
-    parts = {"stand": stand(), "rack": rack() - squash}   # rib tips squashed into the socket walls, as when fitted
+    parts = {"stand": pressed_stand(), "rack": rack() - squash}   # rib tips squashed into the socket walls, as when fitted
     for i, (x, z) in enumerate(pocket_origins(), 1):
         at = [x, RACK_BACK, z]
         parts[f"cage{i}"] = c.translate(at)
@@ -826,7 +859,7 @@ def check() -> bool:
     report(tip > 15, f"stand reaches {STAND_BACK:.0f} mm behind and {STAND_FRONT:.0f} mm in front of the rack: tips over only past ~{tip:.0f} degrees")
 
     # 9b. the stand holds the rack without the screws: the rack can't tilt or slide in any direction, only lift out
-    st, rk = parts["stand"], parts["rack"]
+    st, rk = stand(ribs=False), parts["rack"]          # the walls alone (ribs tested below)
     def tilt(m, axis, pivot, deg):
         rot = [deg, 0, 0] if axis == "x" else [0, deg, 0]
         return m.translate([-pivot[0], -pivot[1], -pivot[2]]).rotate(rot).translate(list(pivot))
@@ -844,6 +877,23 @@ def check() -> bool:
            f"the stand holds the rack without screws: cheeks {CHEEK_H:.0f} mm high wrap its sides and corners, so it can't "
            f"tilt or slide any way (tested: tilt 2° each way, slide 1 mm each way); it still lifts straight out"
            + ("" if not free else ": FREE to " + ", ".join(free)))
+
+    # 9c. ... and it sits in it with force: only the ribs touch the rack, each STAND_PRESS deep
+    st_r = stand()
+    v_walls = (st ^ rk).volume()
+    v_ribs = (st_r ^ rk).volume()
+    v_else = ((st_r ^ rk) - stand_ribs()).volume()
+    # each rib's contact with the rack, measured on its own: its depth is the thin side of the contact patch
+    depths = []
+    for piece in (stand_ribs() ^ rk).decompose():
+        bb = piece.bounding_box()
+        depths.append(min(bb[3] - bb[0], bb[4] - bb[1]))
+    n_ribs = len(stand_ribs().decompose())
+    press_ok = len(depths) == n_ribs and all(abs(d - STAND_PRESS) < 0.02 for d in depths)
+    report(v_walls < TOL and v_ribs > TOL and v_else < TOL and press_ok,
+           f"the rack sits in the stand with force: all {len(depths)} of {n_ribs} ribs press into it, "
+           f"{min(depths, default=0):.2f}-{max(depths, default=0):.2f} mm deep (8 on its sides, 4 on its back, "
+           f"2 on its front); only the ribs touch (walls {FIT} mm clear)")
 
     write_check_files(parts, lines)
     print("\nALL CHECKS PASSED" if ok else "\nSOME CHECKS FAILED")

@@ -31,3 +31,4 @@ Fit check (python hardware/cages/cages.py check)
 [OK ] gap above each cage 12 mm, rack wall between cages 4 mm
 [OK ] stand reaches 55 mm behind and 60 mm in front of the rack: tips over only past ~25 degrees
 [OK ] the stand holds the rack without screws: cheeks 90 mm high wrap its sides and corners, so it can't tilt or slide any way (tested: tilt 2° each way, slide 1 mm each way); it still lifts straight out
+[OK ] the rack sits in the stand with force: all 14 of 14 ribs press into it, 0.20-0.20 mm deep (8 on its sides, 4 on its back, 2 on its front); only the ribs touch (walls 0.3 mm clear)

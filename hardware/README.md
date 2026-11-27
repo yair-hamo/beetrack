@@ -89,6 +89,11 @@ The cage is made **as shallow as the queen-cell holders allow**, so bees can't t
   to the stand's front and back edges. The rack can't tilt or slide any way; it lifts straight out. The wraps
   stay clear of the feeder holes at the back and of the cages at the front, and the cheeks are open beside the
   rack so air reaches its side windows. It fits the rack you already printed (the rack is unchanged).
+  - **The rack is a press fit.** The stand's walls stay 0.3 mm clear of the rack, and **14 vertical ribs**
+    (Ø 2 mm) on the stand's inside faces press **0.2 mm** into the rack: 4 on each side, 2 on each back corner,
+    1 on each front corner. Push the rack straight down into the stand; it goes in firmly and stays. The tops
+    of the ribs are tapered so it starts in easily. Too tight: set `STAND_PRESS` to 0.1; still loose: 0.3.
+    Only the stand changes.
   - **A light frame, not a solid plate:** side beams under the triangles (with the rubber feet), front and back
     cross bars, a centre beam over the 2020 groove, and the rim, all 6 mm high. Nothing under the rack except
     those beams and two pads for the screws: the rack's own 6 mm floor spans between them. About half the
