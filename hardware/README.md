@@ -28,7 +28,7 @@ rack and its stand**. The camera and light come later (see the end of this page)
 - **Glass cover slides in from the top**: down through a 3 mm slot in the top wall into grooves in the left,
   right and bottom walls. Its top edge ends **flush with the top of the cage**. The front is open at the top,
   so you push the glass up with a thumb on its face.
-- **The queen-cell holders and caps lock the glass.** In a cage this shallow their discs (both 22 mm)
+- **The queen-cell holders and caps lock the glass.** In a cage this shallow their discs (22 mm and 18 mm)
   reach over the glass slot and rest across the glass edge. So: **glass in first, then the holders/caps; to
   open, take the holders/caps out first, then slide the glass up.** The check tests both.
 - **Comb foundation** (`foundation.stl`, printed separately): a 99.7 × 89.7 mm sheet, 1 mm thick, with
@@ -46,15 +46,10 @@ rack and its stand**. The camera and light come later (see the end of this page)
     centred, so the holes line up; the check measures both from the parts and compares them.
 - **Queen-cell caps** (`qc_cap.stl`): close any queen-cell hole you don't use. 3 per cage. A flat plug that
   sticks out only 1.6 mm; a small groove under one edge of its rim lets you lift it out with a screwdriver tip.
-  Its disc is 22 mm, like a holder's, so it covers the whole glass edge. **Press fit:** a Ø 12.7 stem with
-  6 small ribs that press 0.15 mm into the 13 mm hole (`CAP_PRESS`: 0.05–0.1 if too tight, 0.25 if loose).
 - **Vents**: 23 horizontal slits per side, 1.8 mm high (bees can't pass), with 1.8 mm bars between them, over
   the whole height of both side walls. The rack walls beside them are open too.
 - **2 round sockets** (Ø 10.3 × 2.2 mm) in the back of the cage, at the upper corners: the rack's pegs go
   in them, so every cage sits in exactly the same place.
-- **Bevelled mouths on the bed face.** The first printed layer always squashes out a little ("elephant foot")
-  and would make holes on the bed face tight. So the feeder holes, the sockets and the foundation's edge and
-  holes get a 0.4 mm 45° bevel where they touch the bed (`BED_CHAMFER`). The bore itself stays exactly Ø 10.5.
 
 ### How shallow it can be: the queen cells decide
 
@@ -78,7 +73,7 @@ The cage is made **as shallow as the queen-cell holders allow**, so bees can't t
   a back wall and **12 mm of space above the cage** for the queen-cell holders (4 mm to spare). A cage with its
   queen cells in place slides straight in from the front; at the back, **2 pegs** go into the cage's sockets.
   The cage sits on the pocket floor between the pocket walls; nothing to glue.
-  - **The pegs press-fit, so a cage can't slide or fall out on its own.** Each peg is a Ø 10 × 1.8 mm core
+  - **The pegs press-fit, so a cage can't slide or fall out on its own.** Each peg is a Ø 10 × 2 mm core
     (0.15 mm gap in the Ø 10.3 socket) with **6 small ribs** that press 0.15 mm into the socket wall. Push the
     cage in until it touches the back wall; to take it out, pull it straight forward. The pegs also fix it
     left/right and up/down, so every cage sits in exactly the same place.
@@ -86,14 +81,14 @@ The cage is made **as shallow as the queen-cell holders allow**, so bees can't t
   - **The holes in the back wall are exactly the cage's feeder holes: Ø 10.5 mm, same centres**, so
     **feeders are pushed in and refilled from behind**, through the rack, the cage and the foundation in one
     straight line.
-  - Air slots in the walls beside each cage's vents (8 mm, with 3 mm bars, so the rack prints without sagging).
+  - Windows in the walls beside each cage's vents, over their whole height, let air through.
   - The fronts of the cages are flush with the front of the rack, all 4 glasses in one plane.
 - **Stand** (`stand.stl`, 247 × 148 × 128 mm): **holds the rack by itself, no screws needed.** The rack drops
   into a rim, and on each side a **cheek 120 mm high** (as high as the lower row of pockets) hugs the rack's side,
   wraps 20 mm round its back corners and 3 mm round its front corners, and is braced by a **triangular wing**
   that runs down to the stand's front and back edges. The rack can't tilt or slide any way; it lifts straight
   out. The wraps stay clear of the feeder holes at the back and of the cages at the front, and an opening in
-  each cheek lets air reach the side slots.
+  each cheek lets air reach the side windows. It fits the rack you already printed (the rack is unchanged).
   - The **2 countersunk M5 × 12 screws** are still there if you want them: down through the floors of the lower
     pockets, heads flush so the cages slide over them, nuts in hexagonal pockets under the stand.
   - **On a table:** the stand reaches 55 mm behind and 60 mm in front of the rack, so it won't tip unless
@@ -120,9 +115,10 @@ printed, but the check still tests it), and tests it:
 
 - every STL file, read back from disk, is one closed solid (nothing loose or floating) and fits the P2S bed
   (256 × 256 × 256 mm);
-- **every part prints without supports:** at every overhang it measures how far each point is from material
-  below it, and fails anything over 10.5 mm (half of a 21 mm bridge). The widest are the cage's 2.5 mm ledge
-  over the glass groove, the rack's 8 mm air-slot bridges and the stand's 20.4 mm rail groove;
+- **the stand prints without supports:** at every overhang it measures how far each point is from material
+  below it, and fails anything over 10.5 mm (half of a 21 mm bridge). The cage, foundation, caps and rack are
+  already printed and stay exactly as printed (`ALREADY_PRINTED` in `cages.py`); for them it only notes what to
+  improve in a future reprint;
 - **no two of the 22 parts overlap** (the ribs on the foundation and the pegs are counted as squashed, as when fitted);
 - the rack's pegs press-fit the cage sockets: only their ribs touch, 0.15 mm deep, so the cages can't slide out;
 - the holes in the rack, the cage and the foundation are **exactly the same size, on the same centres** (measured from the parts);
@@ -132,7 +128,6 @@ printed, but the check still tests it), and tests it:
   removed, and **with them in place the glass is held down**;
 - the glass fits its grooves; the foundation is a press fit (only its ribs touch the walls, 0.15 mm deep), its feeder holes are exactly the cage's (same diameter, same centres), and it goes in and out through the front;
 - a cage with 3 queen cells slides into every pocket;
-- the caps press-fit their holes (only the ribs touch);
 - **the stand holds the rack without screws:** tilted 2° or slid 1 mm in any direction, the rack hits the
   stand; it only lifts straight out;
 - the stand is stable on a table.
@@ -155,33 +150,9 @@ check again; it ends with `ALL CHECKS PASSED` or names what doesn't fit.
 PETG, not PLA: PLA softens in a warm bee room. The rack prints on its back, so the pegs point straight up:
 no supports.
 
-### Print the test pieces first
-
-The check proves the parts fit **as drawn**. Your printer adds its own small errors (holes a little small,
-first layer a little wide), and the press fits are only 0.15 mm. So before printing everything, print the
-**test pieces** in [`cages/stl/test/`](cages/stl/test/) (about an hour, a few grams). Each is cut out of the
-real part, same geometry and same print orientation, so if a test piece fits, the real part fits:
-
-| Piece | Size (mm) | What it is |
-|---|---|---|
-| `test_cage` | 35 × 100 × 27 | left slice of the cage: a feeder hole, a queen-cell hole, a socket, glass groove and slot, vents |
-| `test_foundation` | 30 × 90 × 3 | matching slice of the foundation: 7 ribs and a feeder hole |
-| `test_rack` | 40 × 122 × 33 | matching slice of the bottom-left pocket: a peg, a feeder hole, floor, wall, ceiling |
-| `qc_cap` (from `stl/`) | 22 × 22 × 7 | one real cap |
-
-Try each fit and correct one number if needed:
-
-| Try | Should be | If not |
-|---|---|---|
-| press `test_foundation` into `test_cage` | goes in with thumbs, holds when turned over | `RIB_PRESS` |
-| push `test_cage` onto the peg in `test_rack` | pushes on firmly, holds when turned over | `PEG_PRESS` |
-| a real feeder through rack, cage and foundation | same snug fit in all three | `FEED_D` |
-| `qc_cap` into the queen-cell hole | snug, comes out with a screwdriver | `CAP_PRESS` |
-| a real queen-cell holder into the hole | drops in | `QC_D` |
-| a strip of your glass in the groove and slot | slides freely | `GLASS_T` |
-
-Change the number in `cages.py`, run `python hardware/cages/cages.py check` and
-`python hardware/cages/test_pieces.py`, and reprint only that test piece. When all fit, print the real parts.
+**Test before printing all of them:** print one cage, one foundation and one cap. Check the glass slides
+freely, the holder and the feeder tubes fit their holes, and the cap is snug. Then measure and correct
+`GLASS_T`, `QC_FLANGE_D`, `FEED_D` or `CAP_STEM_D` in `cages.py` if needed, and run the check again.
 
 ## Later: camera and light (not being built now)
 

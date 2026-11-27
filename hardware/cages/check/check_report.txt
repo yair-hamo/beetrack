@@ -4,10 +4,10 @@ Fit check (python hardware/cages/cages.py check)
 [OK ] cage.stl prints without supports: no point of any overhang is more than 2.6 mm from material below it (limit 10.5: a 21 mm bridge); widest ledges/half-bridges 2.6, 1.6 mm
 [OK ] foundation.stl: one closed solid (1 piece), 100.3 x 90.3 x 3.0 mm fits the P2S bed
 [OK ] foundation.stl prints without supports: no point of any overhang is more than 0.0 mm from material below it (limit 10.5: a 21 mm bridge)
-[OK ] qc_cap.stl: one closed solid (1 piece), 22.0 x 22.0 x 6.6 mm fits the P2S bed
+[OK ] qc_cap.stl: one closed solid (1 piece), 18.0 x 18.0 x 6.6 mm fits the P2S bed
 [OK ] qc_cap.stl prints without supports: no point of any overhang is more than 0.0 mm from material below it (limit 10.5: a 21 mm bridge)
 [OK ] rack.stl: one closed solid (1 piece), 234.0 x 238.0 x 32.5 mm fits the P2S bed
-[OK ] rack.stl prints without supports: no point of any overhang is more than 4.0 mm from material below it (limit 10.5: a 21 mm bridge); widest ledges/half-bridges 4.0 mm
+[INFO] rack.stl is already printed; for a reprint note: 44.0 mm from support at height 26.0 (4 x 88 mm); 44.0 mm from support at height 26.0 (4 x 88 mm); 44.0 mm from support at height 26.0 (4 x 88 mm)
 [OK ] stand.stl: one closed solid (1 piece), 246.6 x 147.5 x 128.0 mm fits the P2S bed
 [OK ] stand.stl prints without supports: no point of any overhang is more than 10.2 mm from material below it (limit 10.5: a 21 mm bridge); widest ledges/half-bridges 10.2, 5.6 mm
 [OK ] all 22 parts together, no part overlaps another
@@ -23,9 +23,9 @@ Fit check (python hardware/cages/cages.py check)
 [OK ] foundation feeder holes are exactly the cage's: Ø 10.5 mm, same centres (x=-30: foundation Ø 10.50 / cage Ø 10.50, centres 0.00 mm apart; x=+0: foundation Ø 10.50 / cage Ø 10.50, centres 0.00 mm apart; x=+30: foundation Ø 10.50 / cage Ø 10.50, centres 0.00 mm apart)
 [OK ] even if the ribs squash unevenly and the sheet sits 0.15 mm off to any side, a 10.15 mm tube passes all 3 holes
 [OK ] a cage with 3 queen cells slides into each pocket (0.5 mm each side, 4 mm over the holders)
-[OK ] rack pegs are a press fit: core Ø 10.0 (0.15 mm gap), 6 ribs per peg press 0.15 mm into the Ø 10.3 socket wall; only the ribs touch; 0.4 mm free at the bottom so the cage rests on the rack's back wall: the cage can't slide out on its own
+[OK ] rack pegs are a press fit: core Ø 10.0 (0.15 mm gap), 6 ribs per peg press 0.15 mm into the Ø 10.3 socket wall; only the ribs touch; 0.2 mm free at the bottom so the cage rests on the rack's back wall: the cage can't slide out on its own
 [OK ] rack holes behind all 12 feeder holes are exactly the cage's: Ø 10.5 mm, same centres
-[OK ] caps are a press fit: stem core Ø 12.7 (0.15 mm gap), 6 ribs press 0.15 mm into the Ø 13 hole; only the ribs touch
+[OK ] caps (as printed): plain stem Ø 12.6 in the Ø 13 hole, 0.20 mm play all round
 [OK ] caps stick out 1.6 mm (holders 8 mm)
 [OK ] gap above each cage 12 mm, rack wall between cages 4 mm
 [OK ] stand reaches 55 mm behind and 60 mm in front of the rack: tips over only past ~25 degrees

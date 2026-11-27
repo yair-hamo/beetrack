@@ -57,9 +57,10 @@ FOUND_T = FOUND_BASE + CELL_H
 CELL = 5.4              # worker cell size, centre to centre (flat to flat)
 CELL_WALL = 0.8         # cell wall thickness (2 lines of a 0.4 mm nozzle)
 FIT = 0.3               # clearance around parts that go into each other
-# the first layer always squashes out a little ("elephant foot"): edges and hole mouths on the bed face get a
-# small 45-degree bevel, so they don't come out tight or undersized
-BED_CHAMFER = 0.4
+# the first layer always squashes out a little ("elephant foot"). A small 45-degree bevel on bed-face edges and
+# hole mouths would help, but the cages, foundations, caps and rack are ALREADY PRINTED without it: keep 0 so the
+# files stay the printed ones. (0.4 is a good value for a future reprint.)
+BED_CHAMFER = 0.0
 # the foundation is a press fit, so it can't fall forward: the sheet itself has a small gap to the walls, and
 # round ribs on its 4 edges stand out past that gap and press into the walls (left, right, floor, roof)
 FOUND_CLR = 0.15        # gap between the sheet's edges and the walls
@@ -82,13 +83,12 @@ QC_COMB_GAP = 1.0       # hole edge -> tops of the foundation cells (the foundat
 QC_GLASS_GAP = 1.0      # hole edge -> glass route
 
 # cap for an unused queen-cell hole
-CAP_STEM_D = 12.7                 # stem core: 0.15 mm gap in the 13 mm hole
-# the cap is a press fit (the plain 12.6 stem was too loose): ribs on the stem press into the hole wall
-CAP_RIBS = 6
+CAP_STEM_D = 12.6                 # as printed. For a tighter reprint: 12.7 with CAP_RIBS = 6 (press-fit ribs)
+CAP_RIBS = 0
 CAP_RIB_D = 1.2
 CAP_PRESS = 0.15                  # how far each rib presses into the hole wall. Too tight: 0.05-0.1. Loose: 0.25.
 CAP_RIB_LEAD = 1.0                # the lower end of each rib is tapered, so the cap starts into the hole easily
-CAP_FLANGE_D = 22.0               # as wide as a holder disc, so it covers the whole glass edge
+CAP_FLANGE_D = 18.0               # as printed (22 would cover the whole glass edge, like a holder disc)
 CAP_FLANGE_T = 1.6
 CAP_PRY_W, CAP_PRY_D = 4.0, 1.0   # small groove under one edge of the flange: lift the cap with a screwdriver tip
 
@@ -99,7 +99,7 @@ VENT_W, VENT_PITCH = 1.8, 3.6   # slit height, slit-to-slit (1.8 mm bars between
 SOCKET_D, SOCKET_T = 10.3, 2.2    # the sockets in the cage (first made for 10 x 2 mm magnets)
 SOCKET_X, SOCKET_Z = 38.0, 80.0   # from the cage centre / from the cage bottom
 PEG_D = 10.0                      # peg core on the rack: 0.15 mm gap all round in the socket
-PEG_L = 1.8                       # 0.4 mm shorter than the socket is deep: the bridged socket ceiling may sag a little
+PEG_L = 2.0                       # 0.2 mm shorter than the socket is deep, so the cage still touches the rack
 PEG_CHAMFER = 0.4                 # bevelled tip, guides the cage onto the pegs
 # the pegs are a press fit, so a cage can't slide or fall out of its pocket: small round ribs on each peg stand
 # out past the gap and press into the socket wall (same idea as the foundation ribs)
@@ -115,7 +115,9 @@ RACK_FLOOR = 6.0        # the bottom slab (the countersunk screws to the stand g
 POCKET_CLR = 0.5        # cage <-> pocket walls, each side
 HEAD_ROOM = 4.0         # above the queen-cell holders
 # the holes in the rack back wall behind the feeder holes are exactly the cage's (FEED_D, same centres)
-RACK_SLOT_W, RACK_SLOT_BAR = 8.0, 3.0   # air slots in the rack walls: <= 8 mm bridges print clean
+# air windows in the rack walls: the PRINTED rack has one 88 mm window per wall (RACK_SLOT_W = 88). For a reprint,
+# 8 mm slots with 3 mm bars print cleaner (the wall above a long window has to bridge it).
+RACK_SLOT_W, RACK_SLOT_BAR = 88.0, 3.0
 
 # stand: the rack drops into it; it stands on a table or bolts onto a 2020 aluminium profile
 STAND_T = 8.0
@@ -195,6 +197,8 @@ def cyl_y(d, y0, y1, x=0.0, z=0.0, seg=SEG) -> Manifold:
 def mouth_y(d, y0, x=0.0, z=0.0, c=None) -> Manifold:
     """45-degree bevel at the mouth of a hole along +y whose open face is at y = y0 (the bed face)."""
     c = BED_CHAMFER if c is None else c
+    if c <= 0:
+        return Manifold()
     return Manifold.cylinder(c + 0.01, d / 2 + c + 0.01, d / 2 - 0.0, SEG).rotate([-90, 0, 0]).translate([x, y0 - 0.01, z])
 
 
@@ -292,7 +296,7 @@ def foundation(ribs: bool = True) -> Manifold:
     w, h = IN_W - 2 * FOUND_CLR, IN_H - 2 * FOUND_CLR
     x0, z0 = -w / 2, Z_FLOOR + FOUND_CLR
     c = BED_CHAMFER
-    sheet = union([box(x0, x0 + w, Y_FOUND + c, Y_FOUND + FOUND_T, z0, z0 + h),
+    sheet = box(x0, x0 + w, Y_FOUND, Y_FOUND + FOUND_T, z0, z0 + h) if c <= 0 else union([box(x0, x0 + w, Y_FOUND + c, Y_FOUND + FOUND_T, z0, z0 + h),
                    Manifold.hull(union([box(x0 + c, x0 + w - c, Y_FOUND, Y_FOUND + 0.01, z0 + c, z0 + h - c),
                                         box(x0, x0 + w, Y_FOUND + c, Y_FOUND + c + 0.01, z0, z0 + h)]))])
     # cells: hexagonal pockets in the front face, kept 1.5 mm from the edges and 1.8 mm from the holes
@@ -353,6 +357,8 @@ def qc_cap() -> Manifold:
 
 def cap_ribs() -> Manifold:
     """Round vertical ribs around the cap stem (cap at the origin); each reaches CAP_PRESS past the hole wall."""
+    if CAP_RIBS == 0:
+        return Manifold()
     rr = CAP_RIB_D / 2
     rc = QC_D / 2 + CAP_PRESS - rr
     stem_l = CAGE_H - Z_ROOF
@@ -502,6 +508,8 @@ def flat_front_up(m: Manifold) -> Manifold:
     return m.rotate([90, 0, 0])
 
 
+ALREADY_PRINTED = {"cage", "foundation", "qc_cap", "rack"}   # keep these files unchanged; only the stand is new
+
 PARTS = {
     # name: (builder, print orientation, how many to print, colour, note)
     "cage": (cage, on_back, "4 (+1 spare)", "white", "back wall on the bed, no supports"),
@@ -581,6 +589,11 @@ def check() -> bool:
         worst = max(spans, default=(0.0, 0.0, (0, 0)))
         bad = [sp for sp in spans if sp[0] > MAX_BRIDGE / 2]
         ledges = sorted({round(sp[0], 1) for sp in spans if 1.5 < sp[0] <= MAX_BRIDGE / 2}, reverse=True)
+        if bad and name in ALREADY_PRINTED:
+            lines.append(f"[INFO] {name}.stl is already printed; for a reprint note: " + "; ".join(
+                f"{d:.1f} mm from support at height {z:.1f} ({sz[0]:.0f} x {sz[1]:.0f} mm)" for d, z, sz in bad[:3]))
+            print(lines[-1])
+            continue
         report(not bad, f"{name}.stl prints without supports: no point of any overhang is more than {worst[0]:.1f} mm from "
                f"material below it (limit {MAX_BRIDGE / 2:.1f}: a {MAX_BRIDGE:.0f} mm bridge)"
                + (f"; widest ledges/half-bridges {', '.join(f'{v:.1f}' for v in ledges[:4])} mm" if ledges else "")
@@ -749,7 +762,11 @@ def check() -> bool:
     reach = max(-bb[0], bb[3], -bb[1], bb[4])
     cap_press = reach - QC_D / 2
     # ribs sit at 30, 90, 150 ... degrees: the bounding box sees the ones at 90/270 exactly
-    report(v_core < TOL and v_rib > TOL and v_out < TOL and abs(cap_press - CAP_PRESS) < 0.02,
+    if CAP_RIBS == 0:
+        report(v_core < TOL, f"caps (as printed): plain stem Ø {CAP_STEM_D} in the Ø {QC_D:.0f} hole, "
+               f"{(QC_D - CAP_STEM_D) / 2:.2f} mm play all round")
+    else:
+      report(v_core < TOL and v_rib > TOL and v_out < TOL and abs(cap_press - CAP_PRESS) < 0.02,
            f"caps are a press fit: stem core Ø {CAP_STEM_D} ({(QC_D - CAP_STEM_D) / 2:.2f} mm gap), {CAP_RIBS} ribs press "
            f"{cap_press:.2f} mm into the Ø {QC_D:.0f} hole; only the ribs touch")
     cap_h = CAP_FLANGE_T
