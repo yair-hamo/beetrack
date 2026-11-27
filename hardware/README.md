@@ -83,12 +83,16 @@ The cage is made **as shallow as the queen-cell holders allow**, so bees can't t
     straight line.
   - Windows in the walls beside each cage's vents, over their whole height, let air through.
   - The fronts of the cages are flush with the front of the rack, all 4 glasses in one plane.
-- **Stand** (`stand.stl`, 247 × 148 × 128 mm): **holds the rack by itself, no screws needed.** The rack drops
-  into a rim, and on each side a **cheek 120 mm high** (as high as the lower row of pockets) hugs the rack's side,
-  wraps 20 mm round its back corners and 3 mm round its front corners, and is braced by a **triangular wing**
-  that runs down to the stand's front and back edges. The rack can't tilt or slide any way; it lifts straight
-  out. The wraps stay clear of the feeder holes at the back and of the cages at the front, and an opening in
-  each cheek lets air reach the side windows. It fits the rack you already printed (the rack is unchanged).
+- **Stand** (`stand.stl`, 247 × 148 × 96 mm): **holds the rack by itself, no screws needed.** The rack drops
+  into a rim, and on each side a **cheek 90 mm high** hugs the rack's side, wraps 20 mm round its back corners
+  and 3 mm round its front corners, and is braced by **open triangles** (base, upright, diagonal) that run down
+  to the stand's front and back edges. The rack can't tilt or slide any way; it lifts straight out. The wraps
+  stay clear of the feeder holes at the back and of the cages at the front, and the cheeks are open beside the
+  rack so air reaches its side windows. It fits the rack you already printed (the rack is unchanged).
+  - **A light frame, not a solid plate:** side beams under the triangles (with the rubber feet), front and back
+    cross bars, a centre beam over the 2020 groove, and the rim, all 6 mm high. Nothing under the rack except
+    those beams and two pads for the screws: the rack's own 6 mm floor spans between them. About half the
+    filament of a solid stand (~125 g instead of ~240 g).
   - The **2 countersunk M5 × 12 screws** are still there if you want them: down through the floors of the lower
     pockets, heads flush so the cages slide over them, nuts in hexagonal pockets under the stand.
   - **On a table:** the stand reaches 55 mm behind and 60 mm in front of the rack, so it won't tip unless
@@ -145,7 +149,7 @@ check again; it ends with `ALL CHECKS PASSED` or names what doesn't fit.
 | `foundation` | 4 (+1) | white or natural | flat, cells up (as exported); 0.12 mm layers so the cell walls come out clean |
 | `qc_cap` | 12 | white | flat top on the bed, stem up (as exported); no supports |
 | `rack` | 1 | white or black | back wall on the bed (as exported); 4 walls, 15 % gyroid; no supports |
-| `stand` | 1 | any | as exported (base down, cheeks up); no supports |
+| `stand` | 1 | any | as exported (base down, cheeks up); 3 walls, 15 % infill; no supports |
 
 PETG, not PLA: PLA softens in a warm bee room. The rack prints on its back, so the pegs point straight up:
 no supports.

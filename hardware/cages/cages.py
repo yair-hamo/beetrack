@@ -28,7 +28,7 @@ from pathlib import Path
 
 import numpy as np
 import trimesh
-from manifold3d import Manifold, Mesh
+from manifold3d import CrossSection, JoinType, Manifold, Mesh
 
 # --------------------------------------------------------------------------- #
 # PARAMETERS
@@ -120,15 +120,21 @@ HEAD_ROOM = 4.0         # above the queen-cell holders
 RACK_SLOT_W, RACK_SLOT_BAR = 88.0, 3.0
 
 # stand: the rack drops into it; it stands on a table or bolts onto a 2020 aluminium profile
-STAND_T = 8.0
+STAND_T = 6.0           # base frame height (the 2020 groove is 3 deep; the M5 nut pockets go right through)
 STAND_FRONT, STAND_BACK = 60.0, 55.0     # how far the stand reaches in front of / behind the rack
 RIM_H, RIM_T = 6.0, 4.0
 # the stand holds the rack by itself (the 2 screws are optional): a tall cheek on each side of the rack that wraps
 # round its back and front corners, braced by a wide triangular wing down to the stand's front and back edges
 CHEEK_T = 6.0           # side cheeks + wings, thickness
-CHEEK_H = 120.0         # how high the cheeks hold the rack (the lower row of pockets is 118 mm high)
+CHEEK_H = 90.0          # how high the cheeks hold the rack (about 3/4 of the lower row of pockets)
 WRAP_BACK = 20.0        # the cheeks wrap this far over the rack's back (clear of the feeder holes)
 WRAP_FRONT = 3.0        # ... and this far over the front of the rack's outer walls (4 mm; the cages start at 4.5)
+# the stand is a light frame, not a solid plate: beams where the loads go, open bays in between
+STRUT = 7.0             # width of the wing struts (each wing is an open triangle: base, upright, diagonal)
+FOOT_W = 16.0           # side beams under the wings, front to back (they carry the rubber feet)
+BAR_W = 10.0            # front and back cross bars
+SPINE_W = 28.0          # centre beam over the 2020 groove (20.4 mm) with the 2 M5 holes
+BOSS_D = 24.0           # solid round pad round each M5 screw under the rack
 RAIL_W, RAIL_DEPTH = 20.4, 3.0           # groove underneath for a 2020 profile
 M5, M5_HEAD = 5.5, 10.4                  # M5 hole; countersunk head diameter
 M5_NUT = 8.4                             # M5 hex nut across flats + clearance
@@ -458,40 +464,69 @@ def rack(peg_ribs_on: bool = True) -> Manifold:
 
 
 def stand() -> Manifold:
-    """The rack drops into the rim; underneath, a groove sits on a 2020 profile running towards the camera."""
-    zt = 0.0                                   # top of the stand plate = rack bottom
-    s = box(-STAND_W / 2, STAND_W / 2, STAND_Y0, STAND_Y0 + STAND_D, zt - STAND_T, zt)
+    """The rack drops into the rim and is held by the cheeks; underneath, a groove sits on a 2020 profile.
+    Built as a light frame: beams and open triangles instead of solid plates."""
+    zt = 0.0                                   # top of the stand frame = rack bottom
+    z0 = zt - STAND_T
     rim_in = (-RACK_W / 2 - FIT, RACK_W / 2 + FIT, -FIT, RACK_D + FIT)
-    rim = box(rim_in[0] - RIM_T, rim_in[1] + RIM_T, rim_in[2] - RIM_T, rim_in[3] + RIM_T, zt - 0.01, zt + RIM_H)
-    rim -= box(*rim_in, zt - 1, zt + RIM_H + 1)
-    s += rim
-    # cheeks with wings: one solid on each side (trapezoid in y-z: the stand's full depth at the bottom, the rack's
-    # depth at the top), plus the wraps round the back and front corners
     yb, yf = rim_in[2] - RIM_T, rim_in[3] + RIM_T          # back / front of the rim
+    Y1 = STAND_Y0 + STAND_D
+    W2 = STAND_W / 2
+    # --- base frame -----------------------------------------------------------------------------------------
+    beams = [
+        box(-W2, -W2 + FOOT_W, STAND_Y0, Y1, z0, zt), box(W2 - FOOT_W, W2, STAND_Y0, Y1, z0, zt),   # side feet
+        box(-W2, W2, STAND_Y0, STAND_Y0 + BAR_W, z0, zt), box(-W2, W2, Y1 - BAR_W, Y1, z0, zt),     # cross bars
+        box(-SPINE_W / 2, SPINE_W / 2, STAND_Y0, Y1, z0, zt),                  # spine over the rail groove
+    ]
+    # no plate under the rack: its own 6 mm floor spans between the side feet, the spine and the 2 screw pads
+    s = union(beams + [cyl_z(BOSS_D, z0, zt, x, y) for x, y in screw_points()]
+              + [box(x - 5, x + 5, yb, yf, z0, zt) for x, y in screw_points()])   # pads tied to the rim
+    # rim round the rack, from the table up (it is also the front and back beam under the rack)
+    rim = box(rim_in[0] - RIM_T, rim_in[1] + RIM_T, yb, yf, z0, zt + RIM_H)
+    rim -= box(*rim_in, zt, zt + RIM_H + 1)
+    rim -= box(rim_in[0] + 0.01, rim_in[1] - 0.01, rim_in[2], rim_in[3], z0 - 1, zt + 0.01)
+    s = union([s, rim])
+    # --- cheeks: solid beside the rack, open triangles (base, upright, diagonal) in front of and behind it ------
+    def side_tri(pts):
+        return CrossSection([pts])
+
+    def to_world(cs, xa, xb):
+        """Extrude a y-z cross-section over x = xa..xb."""
+        m = cs.extrude(xb - xa)                                # (u=y, v=z, w=x)
+        return m.transform([[0, 0, 1, xa], [1, 0, 0, 0], [0, 1, 0, 0]])
+
     for sx in (-1, 1):
         xa, xb = sorted((sx * rim_in[1], sx * (rim_in[1] + CHEEK_T)))
-        wing = Manifold.hull(union([box(xa, xb, STAND_Y0, STAND_Y0 + STAND_D, zt - 0.01, zt + 0.01),
-                                    box(xa, xb, yb, yf, zt + CHEEK_H - 0.01, zt + CHEEK_H)]))
-        # air: an opening beside the rack's side slots (<= 11 mm wide, so its top prints as a short bridge)
-        wing -= box(xa - 1, xb + 1, RACK_BACK + Y_BEE0 + 2, RACK_BACK + Y_BEE0 + 13, RACK_FLOOR + Z_FLOOR + 1,
-                    zt + CHEEK_H - 8)
+        # (the pieces overlap a little instead of just touching, so the mesh stays clean)
+        za, ztop = zt - 1.0, zt + CHEEK_H - 4.0
+        tri_b = [(STAND_Y0, za), (yb + 1.0, za), (yb + 1.0, ztop)]
+        tri_f = [(yf - 1.0, za), (Y1, za), (yf - 1.0, ztop)]
+        wing = to_world(CrossSection([[(yb, za), (yf, za), (yf, zt + CHEEK_H), (yb, zt + CHEEK_H)]]), xa, xb)
+        for tri in (tri_b, tri_f):
+            cs = CrossSection([tri])
+            hole = cs.offset(-STRUT, JoinType.Miter, 6.0)
+            wing = union([wing, to_world(cs - hole, xa, xb)])
+        # beside the rack the cheek is a frame too: a post at the back, a post at the front, a bar on top. The big
+        # opening also lets air reach the rack's side windows; its top is an 18 mm bridge.
+        wing -= box(xa - 1, xb + 1, rim_in[2] + 7, rim_in[2] + 25, zt + 10, zt + CHEEK_H - 8)
         xw0, xw1 = sorted((sx * rim_in[1], sx * (rim_in[1] - WRAP_BACK)))
-        back = box(xw0, xw1, yb, rim_in[2], zt - 0.01, zt + CHEEK_H)
+        back = box(xw0, xw1, yb + 0.5, rim_in[2], zt - 0.01, zt + CHEEK_H - 0.5)   # not flush with the cheek faces
         xf0, xf1 = sorted((sx * rim_in[1], sx * (rim_in[1] - WRAP_FRONT - FIT)))
-        front = box(xf0, xf1, rim_in[3], yf, zt - 0.01, zt + CHEEK_H)
+        front = box(xf0, xf1, rim_in[3], yf - 0.5, zt - 0.01, zt + CHEEK_H - 0.5)
         s = union([s, wing, back, front])
+    # --- holes ------------------------------------------------------------------------------------------------
     # groove for a 2020 profile, along y, and 2 M5 holes for T-nuts (one in front of the rack, one behind)
-    s -= box(-RAIL_W / 2, RAIL_W / 2, STAND_Y0 - 1, STAND_Y0 + STAND_D + 1, zt - STAND_T - 1, zt - STAND_T + RAIL_DEPTH)
+    s -= box(-RAIL_W / 2, RAIL_W / 2, STAND_Y0 - 1, Y1 + 1, z0 - 1, z0 + RAIL_DEPTH)
     for y in (STAND_HOLE_BACK_Y, STAND_HOLE_FRONT_Y):
-        s -= cyl_z(M5, zt - STAND_T - 1, zt + 1, 0, y)
-    # holes + nut traps (from underneath) for the 2 countersunk screws from the rack
+        s -= cyl_z(M5, z0 - 1, zt + 1, 0, y)
+    # holes + nut traps (from underneath) for the 2 optional countersunk screws from the rack
     for x, y in screw_points():
-        s -= cyl_z(M5, zt - STAND_T - 1, zt + 1, x, y)
-        s -= Manifold.cylinder(6.0, M5_NUT / math.sqrt(3), M5_NUT / math.sqrt(3), 6).translate([x, y, zt - STAND_T - 0.01])
-    # 4 recesses for stick-on rubber feet (10 mm), so it does not slide on a table
-    for x in (-STAND_W / 2 + 15, STAND_W / 2 - 15):
-        for y in (STAND_Y0 + 15, STAND_Y0 + STAND_D - 15):
-            s -= cyl_z(10.5, zt - STAND_T - 0.01, zt - STAND_T + 0.8, x, y)
+        s -= cyl_z(M5, z0 - 1, zt + 1, x, y)
+        s -= Manifold.cylinder(STAND_T - 2.0, M5_NUT / math.sqrt(3), M5_NUT / math.sqrt(3), 6).translate([x, y, z0 - 0.01])
+    # 4 recesses for stick-on rubber feet (10 mm), in the corners, so it does not slide on a table
+    for x in (-W2 + FOOT_W / 2, W2 - FOOT_W / 2):
+        for y in (STAND_Y0 + BAR_W / 2 + 1, Y1 - BAR_W / 2 - 1):
+            s -= cyl_z(10.5, z0 - 0.01, z0 + 0.8, x, y)
     return s
 
 

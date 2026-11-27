@@ -8,8 +8,8 @@ Fit check (python hardware/cages/cages.py check)
 [OK ] qc_cap.stl prints without supports: no point of any overhang is more than 0.0 mm from material below it (limit 10.5: a 21 mm bridge)
 [OK ] rack.stl: one closed solid (1 piece), 234.0 x 238.0 x 32.5 mm fits the P2S bed
 [INFO] rack.stl is already printed; for a reprint note: 44.0 mm from support at height 26.0 (4 x 88 mm); 44.0 mm from support at height 26.0 (4 x 88 mm); 44.0 mm from support at height 26.0 (4 x 88 mm)
-[OK ] stand.stl: one closed solid (1 piece), 246.6 x 147.5 x 128.0 mm fits the P2S bed
-[OK ] stand.stl prints without supports: no point of any overhang is more than 10.2 mm from material below it (limit 10.5: a 21 mm bridge); widest ledges/half-bridges 10.2, 5.6 mm
+[OK ] stand.stl: one closed solid (1 piece), 246.6 x 147.5 x 96.0 mm fits the P2S bed
+[OK ] stand.stl prints without supports: no point of any overhang is more than 10.2 mm from material below it (limit 10.5: a 21 mm bridge); widest ledges/half-bridges 10.2, 9.0 mm
 [OK ] all 22 parts together, no part overlaps another
 [OK ] 12 feeder holes open from behind the rack into the bees (a 10.45 mm tube passes straight through rack, cage and foundation)
 [OK ] 3 queen-cell holders (flange 22 mm, 8 mm above the top) sit in the top holes without hitting the cage
@@ -29,4 +29,4 @@ Fit check (python hardware/cages/cages.py check)
 [OK ] caps stick out 1.6 mm (holders 8 mm)
 [OK ] gap above each cage 12 mm, rack wall between cages 4 mm
 [OK ] stand reaches 55 mm behind and 60 mm in front of the rack: tips over only past ~25 degrees
-[OK ] the stand holds the rack without screws: cheeks 120 mm high wrap its sides and corners, so it can't tilt or slide any way (tested: tilt 2° each way, slide 1 mm each way); it still lifts straight out
+[OK ] the stand holds the rack without screws: cheeks 90 mm high wrap its sides and corners, so it can't tilt or slide any way (tested: tilt 2° each way, slide 1 mm each way); it still lifts straight out
