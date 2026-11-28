@@ -138,6 +138,10 @@ BAR_W = 10.0            # front and back cross bars
 SPINE_W = 28.0          # centre beam over the 2020 groove (20.4 mm) with the 2 M5 holes
 # the rack is a press fit in the stand: vertical round ribs on the stand's inside faces (cheeks, back wraps, front
 # wraps) press into the rack's outer walls. Push the rack down into the stand; it goes in firmly and stays.
+# the PRINTED rack, measured with a caliper (it can come out a little smaller than drawn). The stand's ribs are
+# placed to press STAND_PRESS into these real sizes. Measured depth: 32.0 (drawn 32.5). Width: not measured yet.
+RACK_REAL_W = 234.0     # outside width, side to side (drawn 234.0)
+RACK_REAL_D = 32.0      # outside depth, front to back (drawn 32.5)
 STAND_PRESS = 0.3       # how far each rib presses into the rack (strong). Too tight: 0.2. Still loose: 0.4.
 STAND_RIB_D = 2.0
 STAND_RIB_LEAD = 5.0    # the top of each rib is tapered, so the rack starts in easily
@@ -549,9 +553,11 @@ def stand_ribs() -> Manifold:
         lead = Manifold.cylinder(STAND_RIB_LEAD, rr, rr - 0.6, 24).translate([0, 0, h - STAND_RIB_LEAD])
         return union([body, lead]).translate([x, y, 0.0])
     # rib centres: each rib sits on a stand face (FIT outside the rack) and its tip reaches STAND_PRESS into the rack
-    xs = RACK_W / 2 - STAND_PRESS + rr                 # sides
-    yb = STAND_PRESS - rr                              # back (the rack's back face is y = 0)
-    yf = RACK_D - STAND_PRESS + rr                     # front
+    # (the real rack is taken as centred on the drawn one: half the shrink on each face)
+    sy = (RACK_D - RACK_REAL_D) / 2
+    xs = RACK_REAL_W / 2 - STAND_PRESS + rr            # sides
+    yb = sy + STAND_PRESS - rr                         # back (the drawn rack's back face is y = 0)
+    yf = RACK_D - sy - STAND_PRESS + rr                # front
     out = []
     for sx in (-1, 1):
         out += [rib(sx * xs, y) for y in (2.0, 4.5, 27.5, 30.0)]           # on the cheek posts, beside the opening
@@ -891,11 +897,14 @@ def check() -> bool:
         bb = piece.bounding_box()
         depths.append(min(bb[3] - bb[0], bb[4] - bb[1]))
     n_ribs = len(stand_ribs().decompose())
-    press_ok = len(depths) == n_ribs and all(abs(d - STAND_PRESS) < 0.02 for d in depths)
+    # against the DRAWN rack each rib reaches STAND_PRESS plus half of what the real rack is smaller on that axis
+    want = sorted({round(STAND_PRESS + (RACK_W - RACK_REAL_W) / 2, 3), round(STAND_PRESS + (RACK_D - RACK_REAL_D) / 2, 3)})
+    press_ok = len(depths) == n_ribs and all(min(abs(d - w) for w in want) < 0.02 for d in depths)
     report(v_walls < TOL and v_ribs > TOL and v_else < TOL and press_ok,
-           f"the rack sits in the stand with force: all {len(depths)} of {n_ribs} ribs press into it, "
-           f"{min(depths, default=0):.2f}-{max(depths, default=0):.2f} mm deep (8 on its sides, 4 on its back, "
-           f"2 on its front); only the ribs touch (walls {FIT} mm clear)")
+           f"the rack sits in the stand with force: all {len(depths)} of {n_ribs} ribs press {STAND_PRESS} mm into the "
+           f"PRINTED rack as measured ({RACK_REAL_W:.1f} wide, {RACK_REAL_D:.1f} deep; into the drawn one "
+           f"{min(depths, default=0):.2f}-{max(depths, default=0):.2f} mm); 8 on its sides, 4 on its back, 2 on its front; "
+           f"only the ribs touch (walls {FIT} mm clear of the drawn rack)")
 
     write_check_files(parts, lines)
     print("\nALL CHECKS PASSED" if ok else "\nSOME CHECKS FAILED")
