@@ -138,7 +138,7 @@ BAR_W = 10.0            # front and back cross bars
 SPINE_W = 28.0          # centre beam over the 2020 groove (20.4 mm) with the 2 M5 holes
 # the rack is a press fit in the stand: vertical round ribs on the stand's inside faces (cheeks, back wraps, front
 # wraps) press into the rack's outer walls. Push the rack down into the stand; it goes in firmly and stays.
-STAND_PRESS = 0.2       # how far each rib presses into the rack. Too tight: 0.1. Still loose: 0.3.
+STAND_PRESS = 0.3       # how far each rib presses into the rack (strong). Too tight: 0.2. Still loose: 0.4.
 STAND_RIB_D = 2.0
 STAND_RIB_LEAD = 5.0    # the top of each rib is tapered, so the rack starts in easily
 BOSS_D = 24.0           # solid round pad round each M5 screw under the rack
