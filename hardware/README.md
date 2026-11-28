@@ -97,8 +97,8 @@ The cage is made **as shallow as the queen-cell holders allow**, so bees can't t
     1 on each front corner. Push the rack straight down into the stand; it goes in firmly and stays. The tops
     of the ribs are tapered so it starts in easily. Too tight: set `STAND_PRESS` to 0.2; still loose: 0.4.
     The ribs are placed against the **printed rack as measured** (`RACK_REAL_W`, `RACK_REAL_D` in `cages.py`):
-    it measured 32.0 mm deep (drawn 32.5), so the front and back ribs reach 0.5 mm further in. If you measure
-    the rack's width, put it in `RACK_REAL_W` and run the script again.
+    it measured 234.0 mm wide (as drawn) and 32.0 mm deep (drawn 32.5), so the front and back ribs reach
+    0.5 mm further in.
     Only the stand changes.
   - **A light frame, not a solid plate:** side beams under the triangles (with the rubber feet), front and back
     cross bars, a centre beam over the 2020 groove, and the rim, all 6 mm high. Nothing under the rack except

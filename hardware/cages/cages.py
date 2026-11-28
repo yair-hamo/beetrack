@@ -139,8 +139,8 @@ SPINE_W = 28.0          # centre beam over the 2020 groove (20.4 mm) with the 2 
 # the rack is a press fit in the stand: vertical round ribs on the stand's inside faces (cheeks, back wraps, front
 # wraps) press into the rack's outer walls. Push the rack down into the stand; it goes in firmly and stays.
 # the PRINTED rack, measured with a caliper (it can come out a little smaller than drawn). The stand's ribs are
-# placed to press STAND_PRESS into these real sizes. Measured depth: 32.0 (drawn 32.5). Width: not measured yet.
-RACK_REAL_W = 234.0     # outside width, side to side (drawn 234.0)
+# placed to press STAND_PRESS into these real sizes. Measured: 234.0 wide (as drawn), 32.0 deep (drawn 32.5).
+RACK_REAL_W = 234.0     # outside width, side to side (measured 234.0, as drawn)
 RACK_REAL_D = 32.0      # outside depth, front to back (drawn 32.5)
 STAND_PRESS = 0.3       # how far each rib presses into the rack (strong). Too tight: 0.2. Still loose: 0.4.
 STAND_RIB_D = 2.0
