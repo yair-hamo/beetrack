@@ -83,10 +83,13 @@ QC_COMB_GAP = 1.0       # hole edge -> tops of the foundation cells (the foundat
 QC_GLASS_GAP = 1.0      # hole edge -> glass route
 
 # cap for an unused queen-cell hole
-CAP_STEM_D = 12.6                 # as printed. For a tighter reprint: 12.7 with CAP_RIBS = 6 (press-fit ribs)
-CAP_RIBS = 0
+# the first printed caps (plain 12.6 stem) were loose: the cap is now a press fit, a 12.7 stem (0.15 mm gap) with
+# 6 vertical ribs that press into the 13 mm hole
+CAP_STEM_D = 12.7
+CAP_RIBS = 6
 CAP_RIB_D = 1.2
-CAP_PRESS = 0.15                  # how far each rib presses into the hole wall. Too tight: 0.05-0.1. Loose: 0.25.
+CAP_PRESS = 0.2                   # how far each rib presses into the hole wall. Too tight: 0.1. Still loose: 0.3.
+CAP_TEST_PRESS = (0.1, 0.2, 0.3)  # stl/qc_cap_sizes/: print one of each, keep the one that fits best
 CAP_RIB_LEAD = 1.0                # the lower end of each rib is tapered, so the cap starts into the hole easily
 CAP_FLANGE_D = 18.0               # as printed (22 would cover the whole glass edge, like a holder disc)
 CAP_FLANGE_T = 1.6
@@ -577,11 +580,11 @@ def flat_front_up(m: Manifold) -> Manifold:
 
 
 # these parts are ALREADY PRINTED: their STL files must never change. The check compares each file with the
-# fingerprint (SHA-256) of the file that was printed and fails if it differs. Only the stand is still to print.
+# fingerprint (SHA-256) of the file that was printed and fails if it differs. Still to print: the stand and the
+# new, tighter caps.
 ALREADY_PRINTED = {
     "cage": "3bf847dfec9a7a50c2cfd2b7a5c813ecd3541c8cc1cadd8961fff981cb4ed479",
     "foundation": "4bfbb8d897c85552aae4b3d16b2e441c379d4f3e396ce2f61fca86b968a01c40",
-    "qc_cap": "9917f7497d16a6001086cfc423ea3edb54d1ab641558b64adb07c74ba56f0f67",
     "rack": "def6cc5c27a6e559f92e0a8be988f1c07de6f301302368bd90ddc44d1d29e17e",
 }
 
@@ -612,6 +615,17 @@ def export_parts(names=None) -> dict[str, trimesh.Trimesh]:
         ext = t.bounds[1] - t.bounds[0]
         print(f"{name:12s} {ext[0]:6.1f} x {ext[1]:6.1f} x {ext[2]:6.1f} mm  print {qty:12s} {colour:16s} watertight={t.is_watertight}")
         out[name] = t
+    # 3 cap sizes to try first (only the rib press differs)
+    if not names or "qc_cap" in names:
+        global CAP_PRESS
+        keep = CAP_PRESS
+        d = STL / "qc_cap_sizes"
+        d.mkdir(exist_ok=True)
+        for press in CAP_TEST_PRESS:
+            CAP_PRESS = press
+            to_trimesh(place_on_bed(qc_cap().rotate([180, 0, 0]))).export(d / f"qc_cap_press_{press:.1f}mm.stl")
+        CAP_PRESS = keep
+        print(f"qc_cap_sizes/ {', '.join(f'press {p:.1f} mm' for p in CAP_TEST_PRESS)}: print one of each, keep the best fit")
     return out
 
 
