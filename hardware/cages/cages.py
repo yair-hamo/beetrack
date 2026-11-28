@@ -88,8 +88,7 @@ QC_GLASS_GAP = 1.0      # hole edge -> glass route
 CAP_STEM_D = 12.7
 CAP_RIBS = 6
 CAP_RIB_D = 1.2
-CAP_PRESS = 0.2                   # how far each rib presses into the hole wall. Too tight: 0.1. Still loose: 0.3.
-CAP_TEST_PRESS = (0.1, 0.2, 0.3)  # stl/qc_cap_sizes/: print one of each, keep the one that fits best
+CAP_PRESS = 0.3                   # how far each rib presses into the hole wall (ribs reach Ø 13.6). Too tight: 0.2.
 CAP_RIB_LEAD = 1.0                # the lower end of each rib is tapered, so the cap starts into the hole easily
 CAP_FLANGE_D = 18.0               # as printed (22 would cover the whole glass edge, like a holder disc)
 CAP_FLANGE_T = 1.6
@@ -615,17 +614,6 @@ def export_parts(names=None) -> dict[str, trimesh.Trimesh]:
         ext = t.bounds[1] - t.bounds[0]
         print(f"{name:12s} {ext[0]:6.1f} x {ext[1]:6.1f} x {ext[2]:6.1f} mm  print {qty:12s} {colour:16s} watertight={t.is_watertight}")
         out[name] = t
-    # 3 cap sizes to try first (only the rib press differs)
-    if not names or "qc_cap" in names:
-        global CAP_PRESS
-        keep = CAP_PRESS
-        d = STL / "qc_cap_sizes"
-        d.mkdir(exist_ok=True)
-        for press in CAP_TEST_PRESS:
-            CAP_PRESS = press
-            to_trimesh(place_on_bed(qc_cap().rotate([180, 0, 0]))).export(d / f"qc_cap_press_{press:.1f}mm.stl")
-        CAP_PRESS = keep
-        print(f"qc_cap_sizes/ {', '.join(f'press {p:.1f} mm' for p in CAP_TEST_PRESS)}: print one of each, keep the best fit")
     return out
 
 

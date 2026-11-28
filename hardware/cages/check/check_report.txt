@@ -26,7 +26,7 @@ Fit check (python hardware/cages/cages.py check)
 [OK ] a cage with 3 queen cells slides into each pocket (0.5 mm each side, 4 mm over the holders)
 [OK ] rack pegs are a press fit: core Ø 10.0 (0.15 mm gap), 6 ribs per peg press 0.15 mm into the Ø 10.3 socket wall; only the ribs touch; 0.2 mm free at the bottom so the cage rests on the rack's back wall: the cage can't slide out on its own
 [OK ] rack holes behind all 12 feeder holes are exactly the cage's: Ø 10.5 mm, same centres
-[OK ] caps are a press fit: stem core Ø 12.7 (0.15 mm gap), 6 ribs press 0.20 mm into the Ø 13 hole; only the ribs touch
+[OK ] caps are a press fit: stem core Ø 12.7 (0.15 mm gap), 6 ribs press 0.30 mm into the Ø 13 hole; only the ribs touch
 [OK ] caps stick out 1.6 mm (holders 8 mm)
 [OK ] gap above each cage 12 mm, rack wall between cages 4 mm
 [OK ] stand reaches 55 mm behind and 60 mm in front of the rack: tips over only past ~25 degrees

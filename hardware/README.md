@@ -47,11 +47,8 @@ rack and its stand**. The camera and light come later (see the end of this page)
 - **Queen-cell caps** (`qc_cap.stl`): close any queen-cell hole you don't use. 3 per cage. A flat plug that
   sticks out only 1.6 mm; a small groove under one edge of its rim lets you lift it out with a screwdriver tip.
   **Press fit:** the first caps (a plain 12.6 mm stem) were loose, so the stem is now 12.7 mm with **6 small
-  ribs** that press **0.2 mm** into the 13 mm hole (they reach Ø 13.4). The ribs are tapered at the bottom so
-  the cap starts in easily.
-  - **Print the 3 test sizes first** (`stl/qc_cap_sizes/`): ribs pressing 0.1, 0.2 and 0.3 mm (Ø 13.2 / 13.4
-    / 13.6). Try them in a cage and print the 12 caps in the size that fits best. To make that size the main
-    file, set `CAP_PRESS` in `cages.py` and run it again.
+  ribs** that press **0.3 mm** into the 13 mm hole (they reach Ø 13.6). The ribs are tapered at the bottom so
+  the cap starts in easily. Too tight: set `CAP_PRESS` to 0.2.
 - **Vents**: 23 horizontal slits per side, 1.8 mm high (bees can't pass), with 1.8 mm bars between them, over
   the whole height of both side walls. The rack walls beside them are open too.
 - **2 round sockets** (Ø 10.3 × 2.2 mm) in the back of the cage, at the upper corners: the rack's pegs go
